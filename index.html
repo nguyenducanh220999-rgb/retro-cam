@@ -19,25 +19,34 @@
             padding: 12px 12px 10px;
             box-shadow: inset 0 0 12px #000, 0 12px 30px rgba(0,0,0,0.8);
             width: 100%; max-width: 420px; height: 97vh;
-            display: flex; flex-direction: column; gap: 8px;
+            display: flex; flex-direction: column; gap: 7px;
         }
-        .top-bar {
-            display: flex; justify-content: space-between;
-            align-items: center; flex-shrink: 0;
-        }
+
+        /* ── Top bar ── */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .led-display {
             background: #000; color: #ff3333; font-size: 13px;
             padding: 4px 8px; border-radius: 3px; font-weight: bold;
-            border: 1px solid #2a2a2a; box-shadow: inset 0 0 4px #ff000066;
-            letter-spacing: 1px;
+            border: 1px solid #2a2a2a; box-shadow: inset 0 0 4px #ff000066; letter-spacing: 1px;
         }
-        .film-name { font-size: 11px; color: #ffaa00; letter-spacing: 2px; text-transform: uppercase; }
+        .film-name { font-size: 10px; color: #ffaa00; letter-spacing: 1.5px; text-transform: uppercase; max-width: 160px; text-align: right; }
+
+        /* ── Mode bar (Photo / Burst / Timer) ── */
+        .mode-bar {
+            display: flex; gap: 6px; justify-content: center; flex-shrink: 0;
+        }
+        .mode-btn {
+            font-size: 10px; padding: 4px 10px; border-radius: 20px; cursor: pointer;
+            border: 1.5px solid #444; background: #1a1a1a; color: #888;
+            letter-spacing: 0.5px; transition: all 0.15s;
+        }
+        .mode-btn.active { border-color: #ffaa00; color: #ffaa00; background: #2a2200; }
 
         /* ── Viewfinder ── */
         .viewfinder {
             flex: 1; border: 2px solid #000; background: #111;
             position: relative; overflow: hidden; border-radius: 6px; min-height: 0;
-            touch-action: none; /* cho pinch zoom */
+            touch-action: none;
         }
         #webcam { width: 100%; height: 100%; object-fit: cover; display: block; }
         #webcam.mirrored { transform: scaleX(-1); }
@@ -49,10 +58,9 @@
             position: absolute; inset: 0; background: white;
             opacity: 0; z-index: 10; pointer-events: none;
         }
-        .viewfinder::before, .viewfinder::after,
-        .vf-br::before, .vf-br::after {
-            content: ''; position: absolute;
-            width: 16px; height: 16px;
+        /* Corner brackets */
+        .viewfinder::before, .viewfinder::after, .vf-br::before, .vf-br::after {
+            content: ''; position: absolute; width: 16px; height: 16px;
             border-color: rgba(255,255,255,0.35); border-style: solid; z-index: 5;
         }
         .viewfinder::before { top:6px; left:6px; border-width: 2px 0 0 2px; }
@@ -60,30 +68,62 @@
         .vf-br::before { bottom:6px; left:6px; border-width: 0 0 2px 2px; }
         .vf-br::after  { bottom:6px; right:6px; border-width: 0 2px 2px 0; }
 
-        /* ── Zoom bar ── */
-        .zoom-bar {
-            flex-shrink: 0;
-            display: flex; align-items: center; gap: 8px;
-            padding: 0 4px;
+        /* Grid overlay */
+        #grid-overlay {
+            position: absolute; inset: 0; z-index: 4; pointer-events: none;
+            display: none;
         }
+        #grid-overlay.show { display: block; }
+        .grid-line-h, .grid-line-v {
+            position: absolute; background: rgba(255,255,255,0.18);
+        }
+        .grid-line-h { left: 0; right: 0; height: 1px; }
+        .grid-line-v { top: 0; bottom: 0; width: 1px; }
+
+        /* Timer countdown overlay */
+        #timer-overlay {
+            position: absolute; inset: 0; z-index: 20;
+            display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.35);
+        }
+        #timer-overlay.show { display: flex; }
+        #timer-number {
+            font-size: 96px; font-weight: bold; color: #fff;
+            text-shadow: 0 0 30px rgba(255,170,0,0.8), 0 0 60px rgba(255,170,0,0.4);
+            font-family: 'Courier New', monospace;
+            animation: timerPulse 1s ease-in-out infinite;
+        }
+        @keyframes timerPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.15);opacity:0.8} }
+
+        /* Burst indicator */
+        #burst-indicator {
+            position: absolute; top: 10px; right: 10px; z-index: 6;
+            display: none; gap: 4px;
+        }
+        #burst-indicator.show { display: flex; }
+        .burst-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5);
+        }
+        .burst-dot.taken { background: #ffaa00; }
+
+        /* ── Zoom bar ── */
+        .zoom-bar { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 0 4px; }
         .zoom-label { font-size: 10px; color: #888; width: 36px; text-align: right; letter-spacing: 1px; }
         #zoom-slider {
-            flex: 1; -webkit-appearance: none; appearance: none;
-            height: 3px; border-radius: 2px;
+            flex: 1; -webkit-appearance: none; appearance: none; height: 3px; border-radius: 2px;
             background: linear-gradient(to right, #ffaa00 var(--pct,0%), #444 var(--pct,0%));
             outline: none; cursor: pointer;
         }
         #zoom-slider::-webkit-slider-thumb {
             -webkit-appearance: none; width: 16px; height: 16px;
-            border-radius: 50%; background: #ffaa00;
-            border: 2px solid #fff; cursor: pointer;
+            border-radius: 50%; background: #ffaa00; border: 2px solid #fff; cursor: pointer;
         }
         .zoom-btn {
             background: #222; border: 1.5px solid #444; color: #aaa;
             width: 28px; height: 28px; border-radius: 50%; font-size: 14px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        .zoom-btn:active { background: #333; }
 
         /* ── Filter strip ── */
         .filter-strip {
@@ -96,13 +136,10 @@
             align-items: center; gap: 3px; cursor: pointer;
             padding: 4px 6px; border-radius: 8px;
             border: 1.5px solid transparent; background: #222;
-            transition: border-color 0.15s, background 0.15s; min-width: 52px;
+            transition: border-color 0.15s; min-width: 52px;
         }
         .filter-btn.active { border-color: #ffaa00; background: #2a2200; }
-        .filter-thumb {
-            width: 40px; height: 40px; border-radius: 5px;
-            overflow: hidden; background: #333;
-        }
+        .filter-thumb { width: 40px; height: 40px; border-radius: 5px; overflow: hidden; background: #333; }
         .filter-thumb canvas { width: 100%; height: 100%; display: block; }
         .filter-label { font-size: 8px; color: #aaa; text-align: center; letter-spacing: 0.5px; }
         .filter-btn.active .filter-label { color: #ffaa00; }
@@ -128,33 +165,27 @@
             transition: background 0.15s; position: relative;
         }
         .side-btn:active { background: #333; }
-        /* Badge số ảnh trên nút gallery */
+        .side-btn.active-toggle { border-color: #ffaa00; color: #ffaa00; }
         .gallery-badge {
             position: absolute; top: -4px; right: -4px;
-            background: #ff3333; color: #fff;
-            font-size: 9px; font-weight: bold;
+            background: #ff3333; color: #fff; font-size: 9px; font-weight: bold;
             width: 16px; height: 16px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            display: none;
+            display: none; align-items: center; justify-content: center;
         }
         #status {
             font-size: 10px; color: #ffaa00; text-align: center;
             flex-shrink: 0; letter-spacing: 1px; min-height: 14px;
         }
 
-        /* ══════════════════════════════════════
-           GALLERY OVERLAY
-        ══════════════════════════════════════ */
+        /* ══ GALLERY OVERLAY ══ */
         #gallery-overlay {
             display: none; position: fixed; inset: 0;
-            background: #000; z-index: 100;
-            flex-direction: column;
+            background: #000; z-index: 100; flex-direction: column;
         }
         #gallery-overlay.open { display: flex; }
         .gallery-header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 16px 10px;
-            border-bottom: 1px solid #222;
+            padding: 14px 16px 10px; border-bottom: 1px solid #222;
         }
         .gallery-title { font-size: 13px; color: #ffaa00; letter-spacing: 2px; }
         .gallery-close {
@@ -162,7 +193,6 @@
             width: 36px; height: 36px; border-radius: 50%; font-size: 18px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        /* Grid thumbnail */
         .gallery-grid {
             flex: 1; overflow-y: auto; padding: 8px;
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
@@ -171,26 +201,26 @@
             aspect-ratio: 1; overflow: hidden; cursor: pointer; border-radius: 3px;
             position: relative; background: #111;
         }
-        .gallery-thumb img {
-            width: 100%; height: 100%; object-fit: cover;
-            display: block; transition: opacity 0.1s;
-        }
-        .gallery-thumb:active img { opacity: 0.7; }
+        .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .gallery-thumb .thumb-idx {
             position: absolute; bottom: 3px; right: 4px;
             font-size: 8px; color: rgba(255,255,255,0.6);
         }
-        /* Fullscreen viewer */
+        /* Burst group badge */
+        .gallery-thumb .burst-badge {
+            position: absolute; top: 3px; left: 4px;
+            background: rgba(255,170,0,0.85); color: #000;
+            font-size: 8px; font-weight: bold; padding: 1px 4px; border-radius: 3px;
+        }
+
+        /* ══ PHOTO VIEWER ══ */
         #photo-viewer {
             display: none; position: fixed; inset: 0;
-            background: #000; z-index: 200;
-            flex-direction: column; align-items: center; justify-content: center;
+            background: #000; z-index: 200; flex-direction: column;
+            align-items: center; justify-content: center;
         }
         #photo-viewer.open { display: flex; }
-        #viewer-img {
-            max-width: 100%; max-height: calc(100vh - 80px);
-            object-fit: contain; border-radius: 4px;
-        }
+        #viewer-img { max-width: 100%; max-height: calc(100vh - 80px); object-fit: contain; border-radius: 4px; }
         .viewer-bar {
             position: absolute; bottom: 0; left: 0; right: 0;
             display: flex; align-items: center; justify-content: space-between;
@@ -213,11 +243,19 @@
     </style>
 </head>
 <body>
-
 <div class="camera-body">
+
     <div class="top-bar">
         <div class="led-display">FILM: <span id="counter">00</span></div>
         <div class="film-name" id="film-name">Kodak Gold 200</div>
+    </div>
+
+    <!-- Mode selector -->
+    <div class="mode-bar">
+        <button class="mode-btn active" data-mode="single">📷 SINGLE</button>
+        <button class="mode-btn" data-mode="burst">⚡ BURST ×3</button>
+        <button class="mode-btn" data-mode="timer3">⏱ 3s</button>
+        <button class="mode-btn" data-mode="timer10">⏱ 10s</button>
     </div>
 
     <div class="viewfinder" id="viewfinder">
@@ -225,9 +263,28 @@
         <video id="webcam" autoplay playsinline muted></video>
         <img id="preview" alt="Preview">
         <div id="flash-overlay"></div>
+
+        <!-- Grid overlay -->
+        <div id="grid-overlay">
+            <div class="grid-line-h" style="top:33.3%"></div>
+            <div class="grid-line-h" style="top:66.6%"></div>
+            <div class="grid-line-v" style="left:33.3%"></div>
+            <div class="grid-line-v" style="left:66.6%"></div>
+        </div>
+
+        <!-- Timer countdown -->
+        <div id="timer-overlay">
+            <span id="timer-number">3</span>
+        </div>
+
+        <!-- Burst dots indicator -->
+        <div id="burst-indicator">
+            <div class="burst-dot" id="bd0"></div>
+            <div class="burst-dot" id="bd1"></div>
+            <div class="burst-dot" id="bd2"></div>
+        </div>
     </div>
 
-    <!-- Zoom bar -->
     <div class="zoom-bar">
         <button class="zoom-btn" id="zoom-out">−</button>
         <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1">
@@ -240,10 +297,12 @@
     <div class="bottom-bar">
         <button class="side-btn" id="flip-btn">🔄</button>
         <button class="shutter-btn" id="capture-btn">📸</button>
-        <button class="side-btn" id="gallery-btn">
-            🖼️
-            <span class="gallery-badge" id="gallery-badge">0</span>
-        </button>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center">
+            <button class="side-btn" id="gallery-btn">
+                🖼️<span class="gallery-badge" id="gallery-badge"></span>
+            </button>
+            <button class="side-btn" id="grid-btn" title="Toggle grid">⊞</button>
+        </div>
     </div>
 
     <p id="status">INITIALIZING LENS...</p>
@@ -251,7 +310,7 @@
 
 <canvas id="processing-canvas" style="display:none"></canvas>
 
-<!-- ── Gallery overlay ── -->
+<!-- Gallery -->
 <div id="gallery-overlay">
     <div class="gallery-header">
         <div class="gallery-title">📷 ROLL</div>
@@ -263,86 +322,38 @@
     <div class="gallery-grid" id="gallery-grid"></div>
 </div>
 
-<!-- ── Full photo viewer ── -->
+<!-- Viewer -->
 <div id="photo-viewer">
     <button class="viewer-back" id="viewer-back">‹</button>
     <img id="viewer-img" alt="Photo">
     <div class="viewer-bar">
-        <button class="viewer-btn" id="viewer-prev">◀ PREV</button>
+        <button class="viewer-btn" id="viewer-prev">◀</button>
         <span class="viewer-counter" id="viewer-counter"></span>
         <button class="viewer-btn" id="viewer-save">💾 SAVE</button>
-        <button class="viewer-btn" id="viewer-next">NEXT ▶</button>
+        <button class="viewer-btn" id="viewer-next">▶</button>
     </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
 //  FILM PRESETS
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
 const FILMS = [
-    { id:'kodak_gold',  name:'Kodak Gold 200',  short:'KG200', liveFilter:'saturate(1.1) sepia(0.18) brightness(1.05) contrast(1.05)',   grade:{rMul:1.12,gMul:1.04,bMul:0.82,rLift:14,gLift:10,bLift:8},  curve:'soft_s',  grain:28, vignetteInner:0.28,vignetteOuter:0.78,vignetteAlpha:0.60, border:false, halation:{r:255,g:80,b:20,strength:0.06},   stampColor:'#ff6600',stampShadow:'#ff3300' },
-    { id:'kodak_portra',name:'Kodak Portra 400', short:'P400',  liveFilter:'saturate(0.88) brightness(1.08) contrast(0.92) hue-rotate(5deg)',grade:{rMul:1.06,gMul:1.03,bMul:0.96,rLift:18,gLift:14,bLift:12}, curve:'flat',    grain:18, vignetteInner:0.32,vignetteOuter:0.82,vignetteAlpha:0.45, border:false, halation:{r:255,g:120,b:80,strength:0.05},  stampColor:'#ff8833',stampShadow:'#cc4400' },
-    { id:'kodak_ultra', name:'Kodak Ultramax',   short:'UMX',   liveFilter:'saturate(1.25) contrast(1.1) brightness(1.02) hue-rotate(-5deg)',grade:{rMul:1.18,gMul:1.00,bMul:0.78,rLift:10,gLift:8,bLift:14},  curve:'punchy_s',grain:32, vignetteInner:0.25,vignetteOuter:0.72,vignetteAlpha:0.65, border:false, halation:{r:255,g:60,b:10,strength:0.08},   stampColor:'#ff4400',stampShadow:'#aa2200' },
-    { id:'fuji_sup',    name:'Fuji Superia 400', short:'FSP',   liveFilter:'saturate(1.05) hue-rotate(15deg) brightness(1.03) contrast(1.05)',grade:{rMul:0.98,gMul:1.08,bMul:1.02,rLift:10,gLift:12,bLift:14}, curve:'soft_s',  grain:22, vignetteInner:0.30,vignetteOuter:0.80,vignetteAlpha:0.50, border:false, halation:{r:80,g:200,b:120,strength:0.04},  stampColor:'#00dd66',stampShadow:'#008833' },
-    { id:'fuji_vel',    name:'Fuji Velvia 50',   short:'VLV',   liveFilter:'saturate(1.5) contrast(1.18) brightness(0.97)',               grade:{rMul:1.10,gMul:1.06,bMul:1.14,rLift:4,gLift:4,bLift:6},     curve:'punchy_s',grain:12, vignetteInner:0.22,vignetteOuter:0.70,vignetteAlpha:0.70, border:false, halation:{r:200,g:60,b:200,strength:0.04},  stampColor:'#ff33cc',stampShadow:'#990066' },
-    { id:'fuji_pro',    name:'Fuji Pro 400H',    short:'P4H',   liveFilter:'saturate(0.80) brightness(1.12) contrast(0.88) hue-rotate(10deg)',grade:{rMul:0.97,gMul:1.05,bMul:1.08,rLift:20,gLift:18,bLift:16}, curve:'flat',    grain:16, vignetteInner:0.35,vignetteOuter:0.85,vignetteAlpha:0.38, border:false, halation:{r:100,g:180,b:255,strength:0.04}, stampColor:'#44aaff',stampShadow:'#0044aa' },
-    { id:'lomo',        name:'Lomo 800',         short:'LOM',   liveFilter:'saturate(1.4) contrast(1.2) brightness(0.95)',               grade:{rMul:1.20,gMul:0.95,bMul:1.10,rLift:6,gLift:4,bLift:8},     curve:'punchy_s',grain:48, vignetteInner:0.18,vignetteOuter:0.62,vignetteAlpha:0.80, border:false, halation:{r:255,g:30,b:180,strength:0.07},  stampColor:'#ff2288',stampShadow:'#aa0044' },
-    { id:'polaroid',    name:'Polaroid 600',     short:'POL',   liveFilter:'saturate(0.75) brightness(1.10) contrast(0.85) hue-rotate(-8deg)',grade:{rMul:1.02,gMul:1.00,bMul:1.05,rLift:24,gLift:22,bLift:20}, curve:'flat',    grain:14, vignetteInner:0.40,vignetteOuter:0.90,vignetteAlpha:0.30, border:true,  halation:{r:200,g:200,b:255,strength:0.04}, stampColor:'#aabbff',stampShadow:'#4455aa' },
-    { id:'agfa',        name:'Agfa Vista 200',   short:'AGF',   liveFilter:'saturate(1.15) hue-rotate(-10deg) brightness(1.04) contrast(1.08)',grade:{rMul:1.14,gMul:1.02,bMul:0.86,rLift:12,gLift:9,bLift:6},  curve:'soft_s',  grain:24, vignetteInner:0.27,vignetteOuter:0.75,vignetteAlpha:0.55, border:false, halation:{r:255,g:100,b:0,strength:0.06},   stampColor:'#ff9900',stampShadow:'#cc5500' },
-    { id:'ilford',      name:'Ilford HP5',       short:'B&W',   liveFilter:'grayscale(1) contrast(1.1) brightness(1.02)',                grade:null,                                                           curve:'bw_s',    grain:38, vignetteInner:0.24,vignetteOuter:0.74,vignetteAlpha:0.68, border:false, halation:null,                              stampColor:'#ffffff',stampShadow:'#888888' },
-
-    // ── FUJIFILM X-T30 II Film Simulations ──
-    {
-        id:'fuji_classic_chrome', name:'Classic Chrome', short:'CLR-C',
-        liveFilter:'saturate(0.65) contrast(0.9) brightness(1.0) hue-rotate(-5deg) sepia(0.12)',
-        grade:{ rMul:0.96, gMul:1.02, bMul:1.04, rLift:10, gLift:14, bLift:12 },
-        // Extra: green cast
-        colorCast:{ type:'green', r:-8, g:18, b:-4 },
-        curve:'flat', grain:15,
-        vignetteInner:0.30, vignetteOuter:0.80, vignetteAlpha:0.20,
-        border:false,
-        halation:{ r:60, g:180, b:80, strength:0.04 },
-        stampColor:'#66bb66', stampShadow:'#224422',
-        fuji: true
-    },
-    {
-        id:'fuji_classic_neg', name:'Classic Neg.', short:'CLR-N',
-        liveFilter:'saturate(0.78) contrast(1.0) brightness(1.03) sepia(0.22) hue-rotate(3deg)',
-        grade:{ rMul:1.10, gMul:1.02, bMul:0.84, rLift:16, gLift:12, bLift:8 },
-        // Extra: warm yellow/brown cast
-        colorCast:{ type:'warm', r:22, g:10, b:-10 },
-        curve:'soft_s', grain:35,
-        vignetteInner:0.27, vignetteOuter:0.76, vignetteAlpha:0.25,
-        border:false,
-        halation:{ r:255, g:140, b:30, strength:0.06 },
-        stampColor:'#ddaa44', stampShadow:'#885500',
-        fuji: true
-    },
-    {
-        id:'fuji_reala_ace', name:'Reala Ace', short:'REALA',
-        liveFilter:'saturate(0.88) contrast(0.92) brightness(1.04)',
-        grade:{ rMul:1.01, gMul:1.01, bMul:1.00, rLift:12, gLift:12, bLift:12 },
-        colorCast:null,
-        curve:'soft_s', grain:10,
-        vignetteInner:0.35, vignetteOuter:0.85, vignetteAlpha:0.10,
-        border:false,
-        halation:{ r:220, g:200, b:180, strength:0.03 },
-        stampColor:'#cccccc', stampShadow:'#666666',
-        fuji: true
-    },
-    {
-        id:'fuji_nostalgic_neg', name:'Nostalgic Neg', short:'NST-N',
-        liveFilter:'saturate(0.72) contrast(0.85) brightness(1.06) sepia(0.28) hue-rotate(2deg)',
-        grade:{ rMul:1.08, gMul:1.00, bMul:0.88, rLift:20, gLift:15, bLift:10 },
-        // Extra: brown soft cast
-        colorCast:{ type:'brown', r:18, g:8, b:-6 },
-        curve:'flat', grain:30,
-        vignetteInner:0.28, vignetteOuter:0.78, vignetteAlpha:0.25,
-        border:false,
-        halation:{ r:210, g:140, b:60, strength:0.05 },
-        stampColor:'#cc9955', stampShadow:'#664422',
-        fuji: true
-    },
+    { id:'kodak_gold',  name:'Kodak Gold 200',  short:'KG200', liveFilter:'saturate(1.1) sepia(0.18) brightness(1.05) contrast(1.05)',     grade:{rMul:1.12,gMul:1.04,bMul:0.82,rLift:14,gLift:10,bLift:8},  colorCast:null, curve:'soft_s',  grain:28, vignetteInner:0.28,vignetteOuter:0.78,vignetteAlpha:0.60, border:false, halation:{r:255,g:80,b:20,strength:0.06},   stampColor:'#ff6600',stampShadow:'#ff3300' },
+    { id:'kodak_portra',name:'Kodak Portra 400', short:'P400',  liveFilter:'saturate(0.88) brightness(1.08) contrast(0.92) hue-rotate(5deg)',grade:{rMul:1.06,gMul:1.03,bMul:0.96,rLift:18,gLift:14,bLift:12}, colorCast:null, curve:'flat',    grain:18, vignetteInner:0.32,vignetteOuter:0.82,vignetteAlpha:0.45, border:false, halation:{r:255,g:120,b:80,strength:0.05},  stampColor:'#ff8833',stampShadow:'#cc4400' },
+    { id:'kodak_ultra', name:'Kodak Ultramax',   short:'UMX',   liveFilter:'saturate(1.25) contrast(1.1) brightness(1.02) hue-rotate(-5deg)',grade:{rMul:1.18,gMul:1.00,bMul:0.78,rLift:10,gLift:8,bLift:14},  colorCast:null, curve:'punchy_s',grain:32, vignetteInner:0.25,vignetteOuter:0.72,vignetteAlpha:0.65, border:false, halation:{r:255,g:60,b:10,strength:0.08},   stampColor:'#ff4400',stampShadow:'#aa2200' },
+    { id:'fuji_sup',    name:'Fuji Superia 400', short:'FSP',   liveFilter:'saturate(1.05) hue-rotate(15deg) brightness(1.03) contrast(1.05)',grade:{rMul:0.98,gMul:1.08,bMul:1.02,rLift:10,gLift:12,bLift:14}, colorCast:null, curve:'soft_s',  grain:22, vignetteInner:0.30,vignetteOuter:0.80,vignetteAlpha:0.50, border:false, halation:{r:80,g:200,b:120,strength:0.04},  stampColor:'#00dd66',stampShadow:'#008833' },
+    { id:'fuji_vel',    name:'Fuji Velvia 50',   short:'VLV',   liveFilter:'saturate(1.5) contrast(1.18) brightness(0.97)',                 grade:{rMul:1.10,gMul:1.06,bMul:1.14,rLift:4,gLift:4,bLift:6},     colorCast:null, curve:'punchy_s',grain:12, vignetteInner:0.22,vignetteOuter:0.70,vignetteAlpha:0.70, border:false, halation:{r:200,g:60,b:200,strength:0.04},  stampColor:'#ff33cc',stampShadow:'#990066' },
+    { id:'fuji_pro',    name:'Fuji Pro 400H',    short:'P4H',   liveFilter:'saturate(0.80) brightness(1.12) contrast(0.88) hue-rotate(10deg)',grade:{rMul:0.97,gMul:1.05,bMul:1.08,rLift:20,gLift:18,bLift:16}, colorCast:null, curve:'flat',    grain:16, vignetteInner:0.35,vignetteOuter:0.85,vignetteAlpha:0.38, border:false, halation:{r:100,g:180,b:255,strength:0.04}, stampColor:'#44aaff',stampShadow:'#0044aa' },
+    { id:'lomo',        name:'Lomo 800',         short:'LOM',   liveFilter:'saturate(1.4) contrast(1.2) brightness(0.95)',                  grade:{rMul:1.20,gMul:0.95,bMul:1.10,rLift:6,gLift:4,bLift:8},     colorCast:null, curve:'punchy_s',grain:48, vignetteInner:0.18,vignetteOuter:0.62,vignetteAlpha:0.80, border:false, halation:{r:255,g:30,b:180,strength:0.07},  stampColor:'#ff2288',stampShadow:'#aa0044' },
+    { id:'polaroid',    name:'Polaroid 600',     short:'POL',   liveFilter:'saturate(0.75) brightness(1.10) contrast(0.85) hue-rotate(-8deg)',grade:{rMul:1.02,gMul:1.00,bMul:1.05,rLift:24,gLift:22,bLift:20}, colorCast:null, curve:'flat',    grain:14, vignetteInner:0.40,vignetteOuter:0.90,vignetteAlpha:0.30, border:true,  halation:{r:200,g:200,b:255,strength:0.04}, stampColor:'#aabbff',stampShadow:'#4455aa' },
+    { id:'agfa',        name:'Agfa Vista 200',   short:'AGF',   liveFilter:'saturate(1.15) hue-rotate(-10deg) brightness(1.04) contrast(1.08)',grade:{rMul:1.14,gMul:1.02,bMul:0.86,rLift:12,gLift:9,bLift:6},  colorCast:null, curve:'soft_s',  grain:24, vignetteInner:0.27,vignetteOuter:0.75,vignetteAlpha:0.55, border:false, halation:{r:255,g:100,b:0,strength:0.06},   stampColor:'#ff9900',stampShadow:'#cc5500' },
+    { id:'ilford',      name:'Ilford HP5',       short:'B&W',   liveFilter:'grayscale(1) contrast(1.1) brightness(1.02)',                   grade:null,                                                           colorCast:null, curve:'bw_s',    grain:38, vignetteInner:0.24,vignetteOuter:0.74,vignetteAlpha:0.68, border:false, halation:null,                              stampColor:'#ffffff',stampShadow:'#888888' },
+    // ── FUJIFILM X-T30 II ──
+    { id:'fuji_classic_chrome',  name:'Classic Chrome',  short:'CLR-C', fuji:true, liveFilter:'saturate(0.65) contrast(0.9) brightness(1.0) hue-rotate(-5deg) sepia(0.12)',             grade:{rMul:0.96,gMul:1.02,bMul:1.04,rLift:10,gLift:14,bLift:12}, colorCast:{r:-8,g:18,b:-4},  curve:'flat',    grain:15, vignetteInner:0.30,vignetteOuter:0.80,vignetteAlpha:0.20, border:false, halation:{r:60,g:180,b:80,strength:0.04},   stampColor:'#66bb66',stampShadow:'#224422' },
+    { id:'fuji_classic_neg',     name:'Classic Neg.',    short:'CLR-N', fuji:true, liveFilter:'saturate(0.78) contrast(1.0) brightness(1.03) sepia(0.22) hue-rotate(3deg)',             grade:{rMul:1.10,gMul:1.02,bMul:0.84,rLift:16,gLift:12,bLift:8},  colorCast:{r:22,g:10,b:-10}, curve:'soft_s',  grain:35, vignetteInner:0.27,vignetteOuter:0.76,vignetteAlpha:0.25, border:false, halation:{r:255,g:140,b:30,strength:0.06},  stampColor:'#ddaa44',stampShadow:'#885500' },
+    { id:'fuji_reala_ace',       name:'Reala Ace',       short:'REALA', fuji:true, liveFilter:'saturate(0.88) contrast(0.92) brightness(1.04)',                                         grade:{rMul:1.01,gMul:1.01,bMul:1.00,rLift:12,gLift:12,bLift:12}, colorCast:null,              curve:'soft_s',  grain:10, vignetteInner:0.35,vignetteOuter:0.85,vignetteAlpha:0.10, border:false, halation:{r:220,g:200,b:180,strength:0.03}, stampColor:'#cccccc',stampShadow:'#666666' },
+    { id:'fuji_nostalgic_neg',   name:'Nostalgic Neg',   short:'NST-N', fuji:true, liveFilter:'saturate(0.72) contrast(0.85) brightness(1.06) sepia(0.28) hue-rotate(2deg)',            grade:{rMul:1.08,gMul:1.00,bMul:0.88,rLift:20,gLift:15,bLift:10}, colorCast:{r:18,g:8,b:-6},   curve:'flat',    grain:30, vignetteInner:0.28,vignetteOuter:0.78,vignetteAlpha:0.25, border:false, halation:{r:210,g:140,b:60,strength:0.05},  stampColor:'#cc9955',stampShadow:'#664422' },
 ];
 
 // LUT curves
@@ -361,154 +372,151 @@ function buildLUT(type) {
 }
 const LUTS={};['flat','soft_s','punchy_s','bw_s'].forEach(k=>LUTS[k]=buildLUT(k));
 
-// ═══════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════
-const video        = document.getElementById('webcam');
-const preview      = document.getElementById('preview');
-const captureBtn   = document.getElementById('capture-btn');
-const counterEl    = document.getElementById('counter');
-const statusEl     = document.getElementById('status');
-const canvas       = document.getElementById('processing-canvas');
-const ctx          = canvas.getContext('2d');
-const flashOverlay = document.getElementById('flash-overlay');
-const filmNameEl   = document.getElementById('film-name');
-const filterStrip  = document.getElementById('filter-strip');
-const flipBtn      = document.getElementById('flip-btn');
-const zoomSlider   = document.getElementById('zoom-slider');
-const zoomLabel    = document.getElementById('zoom-label');
-const zoomIn       = document.getElementById('zoom-in');
-const zoomOut      = document.getElementById('zoom-out');
-const galleryBtn   = document.getElementById('gallery-btn');
-const galleryBadge = document.getElementById('gallery-badge');
-const galleryOverlay = document.getElementById('gallery-overlay');
-const galleryGrid  = document.getElementById('gallery-grid');
-const galleryClose = document.getElementById('gallery-close');
-const galleryCount = document.getElementById('gallery-count');
-const photoViewer  = document.getElementById('photo-viewer');
-const viewerImg    = document.getElementById('viewer-img');
-const viewerBack   = document.getElementById('viewer-back');
-const viewerPrev   = document.getElementById('viewer-prev');
-const viewerNext   = document.getElementById('viewer-next');
-const viewerSave   = document.getElementById('viewer-save');
-const viewerCounter= document.getElementById('viewer-counter');
+// ═══════════════════════════════════════════
+//  DOM REFS
+// ═══════════════════════════════════════════
+const video         = document.getElementById('webcam');
+const preview       = document.getElementById('preview');
+const captureBtn    = document.getElementById('capture-btn');
+const counterEl     = document.getElementById('counter');
+const statusEl      = document.getElementById('status');
+const canvas        = document.getElementById('processing-canvas');
+const ctx           = canvas.getContext('2d');
+const flashOverlay  = document.getElementById('flash-overlay');
+const filmNameEl    = document.getElementById('film-name');
+const filterStrip   = document.getElementById('filter-strip');
+const flipBtn       = document.getElementById('flip-btn');
+const zoomSlider    = document.getElementById('zoom-slider');
+const zoomLabel     = document.getElementById('zoom-label');
+const zoomIn        = document.getElementById('zoom-in');
+const zoomOut       = document.getElementById('zoom-out');
+const galleryBtn    = document.getElementById('gallery-btn');
+const galleryBadge  = document.getElementById('gallery-badge');
+const galleryOverlay= document.getElementById('gallery-overlay');
+const galleryGrid   = document.getElementById('gallery-grid');
+const galleryClose  = document.getElementById('gallery-close');
+const galleryCount  = document.getElementById('gallery-count');
+const photoViewer   = document.getElementById('photo-viewer');
+const viewerImg     = document.getElementById('viewer-img');
+const viewerBack    = document.getElementById('viewer-back');
+const viewerPrev    = document.getElementById('viewer-prev');
+const viewerNext    = document.getElementById('viewer-next');
+const viewerSave    = document.getElementById('viewer-save');
+const viewerCounter = document.getElementById('viewer-counter');
+const gridBtn       = document.getElementById('grid-btn');
+const gridOverlay   = document.getElementById('grid-overlay');
+const timerOverlay  = document.getElementById('timer-overlay');
+const timerNumber   = document.getElementById('timer-number');
+const burstIndicator= document.getElementById('burst-indicator');
 
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
 let photoCount   = 0;
 let isReviewing  = false;
 let activeStream = null;
 let facingMode   = 'environment';
-let showStamp    = true;
-let currentFilm  = FILMS[0];
 let currentZoom  = 1;
-let zoomTrack    = null; // MediaStreamTrack for native zoom
-let photoRoll    = []; // [{url, blob, filename, filmName}]
+let zoomTrack    = null;
+let photoRoll    = [];
 let viewerIdx    = 0;
+let currentFilm  = FILMS[0];
+let shootMode    = 'single'; // single | burst | timer3 | timer10
+let isShooting   = false;
+let showGrid     = false;
 
-// ═══════════════════════════════════════
-//  CAMERA
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
+//  CAMERA INIT
+// ═══════════════════════════════════════════
 async function initCamera(facing) {
     if (activeStream) activeStream.getTracks().forEach(t=>t.stop());
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             video:{ facingMode:facing, width:{ideal:1920}, height:{ideal:1080} }, audio:false
         });
-        activeStream = stream;
-        video.srcObject = stream;
-        // Check for native zoom support
-        zoomTrack = stream.getVideoTracks()[0];
-        const caps = zoomTrack.getCapabilities?.() || {};
+        activeStream=stream; video.srcObject=stream;
+        zoomTrack=stream.getVideoTracks()[0];
+        const caps=zoomTrack.getCapabilities?.() || {};
         if (caps.zoom) {
-            zoomSlider.min   = caps.zoom.min;
-            zoomSlider.max   = caps.zoom.max;
-            zoomSlider.step  = caps.zoom.step || 0.1;
-            zoomSlider.value = caps.zoom.min;
-            currentZoom = caps.zoom.min;
-        } else {
-            // fallback: CSS scale zoom
-            zoomTrack = null;
-            zoomSlider.min = 1; zoomSlider.max = 5; zoomSlider.step = 0.1; zoomSlider.value = 1;
-            currentZoom = 1;
-        }
+            zoomSlider.min=caps.zoom.min; zoomSlider.max=caps.zoom.max;
+            zoomSlider.step=caps.zoom.step||0.1; zoomSlider.value=caps.zoom.min;
+            currentZoom=caps.zoom.min;
+        } else { zoomTrack=null; zoomSlider.min=1; zoomSlider.max=5; zoomSlider.step=0.1; zoomSlider.value=1; currentZoom=1; }
         updateZoomUI(currentZoom);
-        statusEl.textContent = 'READY TO SHOOT';
+        statusEl.textContent='READY TO SHOOT';
     } catch {
         try {
-            const s = await navigator.mediaDevices.getUserMedia({ video:{width:{ideal:1920},height:{ideal:1080}}, audio:false });
+            const s=await navigator.mediaDevices.getUserMedia({ video:{width:{ideal:1920},height:{ideal:1080}}, audio:false });
             activeStream=s; video.srcObject=s; zoomTrack=null;
             statusEl.textContent='READY (FALLBACK)';
         } catch { statusEl.textContent='CAMERA ERROR'; alert('Vui lòng cấp quyền camera!'); }
     }
 }
 
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
 //  ZOOM
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
 function updateZoomUI(z) {
-    zoomLabel.textContent = z.toFixed(1) + '×';
-    const min = parseFloat(zoomSlider.min), max = parseFloat(zoomSlider.max);
-    const pct = ((z - min) / (max - min)) * 100;
-    zoomSlider.style.setProperty('--pct', pct + '%');
-    zoomSlider.value = z;
+    zoomLabel.textContent=z.toFixed(1)+'×';
+    const min=parseFloat(zoomSlider.min), max=parseFloat(zoomSlider.max);
+    zoomSlider.style.setProperty('--pct',((z-min)/(max-min)*100)+'%');
+    zoomSlider.value=z;
 }
-
 async function setZoom(z) {
-    const min = parseFloat(zoomSlider.min), max = parseFloat(zoomSlider.max);
-    z = Math.max(min, Math.min(max, z));
-    currentZoom = z;
-    updateZoomUI(z);
-    if (zoomTrack) {
-        // Native camera zoom (Android Chrome supports this)
-        try { await zoomTrack.applyConstraints({ advanced:[{ zoom: z }] }); } catch {}
-    } else {
-        // CSS scale fallback — zoom in from center
-        video.style.transform = facingMode==='user'
-            ? `scaleX(-1) scale(${z})`
-            : `scale(${z})`;
-    }
+    const min=parseFloat(zoomSlider.min), max=parseFloat(zoomSlider.max);
+    z=Math.max(min,Math.min(max,z)); currentZoom=z; updateZoomUI(z);
+    if (zoomTrack) { try{ await zoomTrack.applyConstraints({advanced:[{zoom:z}]}); }catch{} }
+    else { video.style.transform=facingMode==='user'?`scaleX(-1) scale(${z})`:`scale(${z})`; }
 }
+zoomSlider.addEventListener('input',()=>setZoom(parseFloat(zoomSlider.value)));
+zoomIn.addEventListener('click', ()=>setZoom(currentZoom+0.5));
+zoomOut.addEventListener('click',()=>setZoom(currentZoom-0.5));
 
-zoomSlider.addEventListener('input', () => setZoom(parseFloat(zoomSlider.value)));
-zoomIn.addEventListener('click',  () => setZoom(currentZoom + 0.5));
-zoomOut.addEventListener('click', () => setZoom(currentZoom - 0.5));
+// Pinch to zoom
+let pinchDist0=0, pinchZoom0=1;
+const vf=document.getElementById('viewfinder');
+vf.addEventListener('touchstart',e=>{ if(e.touches.length===2){ pinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); pinchZoom0=currentZoom; } },{passive:true});
+vf.addEventListener('touchmove',e=>{ if(e.touches.length===2){ const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); setZoom(pinchZoom0*(d/pinchDist0)); } },{passive:true});
 
-// Pinch-to-zoom on viewfinder
-let pinchStartDist = 0, pinchStartZoom = 1;
-const vf = document.getElementById('viewfinder');
-vf.addEventListener('touchstart', e => {
-    if (e.touches.length === 2) {
-        pinchStartDist = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-        );
-        pinchStartZoom = currentZoom;
-    }
-}, { passive: true });
-vf.addEventListener('touchmove', e => {
-    if (e.touches.length === 2) {
-        const dist = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-        );
-        const scale = dist / pinchStartDist;
-        setZoom(pinchStartZoom * scale);
-    }
-}, { passive: true });
-
-// ═══════════════════════════════════════
-//  FLIP CAMERA
-// ═══════════════════════════════════════
-flipBtn.addEventListener('click', () => {
-    facingMode = facingMode==='environment' ? 'user' : 'environment';
+// ═══════════════════════════════════════════
+//  FLIP
+// ═══════════════════════════════════════════
+flipBtn.addEventListener('click',()=>{
+    facingMode=facingMode==='environment'?'user':'environment';
     initCamera(facingMode);
-    video.classList.toggle('mirrored', facingMode==='user');
+    video.classList.toggle('mirrored',facingMode==='user');
 });
 
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
+//  GRID
+// ═══════════════════════════════════════════
+gridBtn.addEventListener('click',()=>{
+    showGrid=!showGrid;
+    gridOverlay.classList.toggle('show',showGrid);
+    gridBtn.classList.toggle('active-toggle',showGrid);
+});
+
+// ═══════════════════════════════════════════
+//  MODE SELECTOR
+// ═══════════════════════════════════════════
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        shootMode=btn.dataset.mode;
+        // Update shutter icon
+        if (shootMode==='burst') captureBtn.textContent='⚡';
+        else if (shootMode.startsWith('timer')) captureBtn.textContent='⏱';
+        else captureBtn.textContent='📸';
+        statusEl.textContent=btn.textContent.trim().toUpperCase()+' MODE';
+    });
+});
+
+// ═══════════════════════════════════════════
 //  FILTER STRIP
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
 function drawSampleToCanvas(c) {
-    const cx=c.getContext('2d'), w=c.width, h=c.height;
+    const cx=c.getContext('2d'),w=c.width,h=c.height;
     const grd=cx.createLinearGradient(0,0,w,h);
     grd.addColorStop(0,'#c87941'); grd.addColorStop(0.3,'#8db36a');
     grd.addColorStop(0.6,'#4a7ba8'); grd.addColorStop(1,'#2a3a5a');
@@ -516,12 +524,11 @@ function drawSampleToCanvas(c) {
     cx.fillStyle='rgba(255,220,160,0.6)';
     cx.beginPath(); cx.ellipse(w*0.55,h*0.45,w*0.18,h*0.25,0,0,Math.PI*2); cx.fill();
 }
-FILMS.forEach((film,idx) => {
-    // Thêm divider phân tách nhóm Fujifilm
-    if (film.fuji && (idx === 0 || !FILMS[idx-1].fuji)) {
-        const div = document.createElement('div');
-        div.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 4px;';
-        div.innerHTML = '<span style="font-size:9px;color:#4a9eff;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;">FUJI</span>';
+FILMS.forEach((film,idx)=>{
+    if (film.fuji && (idx===0||!FILMS[idx-1].fuji)) {
+        const div=document.createElement('div');
+        div.style.cssText='flex-shrink:0;display:flex;align-items:center;padding:0 2px;';
+        div.innerHTML='<span style="font-size:9px;color:#4a9eff;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg)">FUJI</span>';
         filterStrip.appendChild(div);
     }
     const btn=document.createElement('div');
@@ -531,51 +538,38 @@ FILMS.forEach((film,idx) => {
     drawSampleToCanvas(tc); tc.style.filter=film.liveFilter;
     thumb.appendChild(tc);
     const lbl=document.createElement('div'); lbl.className='filter-label';
-    // Fuji presets: show tên ngắn + badge xanh
-    if (film.fuji) {
-        lbl.innerHTML = `<span style="color:#4a9eff">${film.short}</span>`;
-    } else {
-        lbl.textContent=film.short;
-    }
+    lbl.innerHTML=film.fuji?`<span style="color:#4a9eff">${film.short}</span>`:film.short;
     btn.appendChild(thumb); btn.appendChild(lbl);
     filterStrip.appendChild(btn);
     btn.addEventListener('click',()=>{
         document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
         currentFilm=FILMS[idx];
-        filmNameEl.textContent = film.fuji ? `📷 ${film.name}` : film.name;
+        filmNameEl.textContent=film.fuji?`📷 ${film.name}`:film.name;
         video.style.filter=film.liveFilter;
         statusEl.textContent=film.name.toUpperCase();
     });
 });
 video.style.filter=FILMS[0].liveFilter;
 
-// ═══════════════════════════════════════
-//  IMAGE PROCESSING
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
+//  IMAGE PROCESSING PIPELINE
+// ═══════════════════════════════════════════
 function applyGrade(data,film) {
     const {rMul,gMul,bMul,rLift,gLift,bLift}=film.grade;
-    // colorCast: thêm lệch màu đặc trưng của từng film simulation
-    const cc = film.colorCast || null;
-    const ccR = cc ? cc.r : 0;
-    const ccG = cc ? cc.g : 0;
-    const ccB = cc ? cc.b : 0;
+    const cc=film.colorCast||null;
+    const ccR=cc?cc.r:0, ccG=cc?cc.g:0, ccB=cc?cc.b:0;
     for(let i=0;i<data.length;i+=4){
-        data[i]  =Math.min(255,Math.max(0, data[i]  *rMul*0.92+rLift+ccR));
-        data[i+1]=Math.min(255,Math.max(0, data[i+1]*gMul*0.92+gLift+ccG));
-        data[i+2]=Math.min(255,Math.max(0, data[i+2]*bMul*0.92+bLift+ccB));
+        data[i]  =Math.min(255,Math.max(0,data[i]  *rMul*0.92+rLift+ccR));
+        data[i+1]=Math.min(255,Math.max(0,data[i+1]*gMul*0.92+gLift+ccG));
+        data[i+2]=Math.min(255,Math.max(0,data[i+2]*bMul*0.92+bLift+ccB));
     }
 }
-function applyBW(data) {
-    for(let i=0;i<data.length;i+=4){
-        const l=data[i]*0.299+data[i+1]*0.587+data[i+2]*0.114;
-        data[i]=data[i+1]=data[i+2]=l;
-    }
-}
+function applyBW(data){ for(let i=0;i<data.length;i+=4){const l=data[i]*0.299+data[i+1]*0.587+data[i+2]*0.114;data[i]=data[i+1]=data[i+2]=l;} }
 function applyCurve(data,lut){ for(let i=0;i<data.length;i+=4){data[i]=lut[data[i]];data[i+1]=lut[data[i+1]];data[i+2]=lut[data[i+2]];} }
 function applyGrain(data,g){ for(let i=0;i<data.length;i+=4){const n=(Math.random()-0.5)*g;data[i]=Math.min(255,Math.max(0,data[i]+n));data[i+1]=Math.min(255,Math.max(0,data[i+1]+n));data[i+2]=Math.min(255,Math.max(0,data[i+2]+n));} }
 function applyHalation(w,h,hal){
-    if(!hal) return;
+    if(!hal)return;
     const hx=ctx.createRadialGradient(w*0.5,h*0.2,0,w*0.5,h*0.2,w*0.6);
     hx.addColorStop(0,`rgba(${hal.r},${hal.g},${hal.b},${hal.strength})`);
     hx.addColorStop(1,`rgba(${hal.r},${hal.g},${hal.b},0)`);
@@ -588,38 +582,58 @@ function applyVignette(w,h,film){
     ctx.fillStyle=vg; ctx.fillRect(0,0,w,h);
 }
 function applyPolaroidBorder(w,h){
-    const t=Math.floor(w*0.05), bot=Math.floor(w*0.18);
+    const t=Math.floor(w*0.05),bot=Math.floor(w*0.18);
     ctx.fillStyle='#f5f0e8';
     ctx.fillRect(0,0,w,t); ctx.fillRect(0,0,t,h); ctx.fillRect(w-t,0,t,h); ctx.fillRect(0,h-bot,w,bot);
 }
 function drawDateStamp(w,h,film){
-    if(!showStamp) return;
     const now=new Date();
     const stamp=`'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
     const fs=Math.floor(w*0.042);
     ctx.font=`bold ${fs}px "Courier New",monospace`;
     ctx.fillStyle=film.stampColor; ctx.shadowColor=film.stampShadow; ctx.shadowBlur=fs*0.3;
     const tw=ctx.measureText(stamp).width;
-    ctx.fillText(stamp, w-tw-w*0.04, film.border? h-w*0.18-h*0.02 : h-h*0.04);
+    ctx.fillText(stamp,w-tw-w*0.04,film.border?h-w*0.18-h*0.02:h-h*0.04);
     ctx.shadowBlur=0;
 }
 
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
+//  CAPTURE ONE FRAME → returns Promise<{blob,url}>
+// ═══════════════════════════════════════════
+function captureFrame(film) {
+    return new Promise(resolve=>{
+        canvas.width=video.videoWidth||1280; canvas.height=video.videoHeight||720;
+        ctx.filter='none';
+        if (facingMode==='user'){ ctx.save();ctx.translate(canvas.width,0);ctx.scale(-1,1);ctx.drawImage(video,0,0,canvas.width,canvas.height);ctx.restore(); }
+        else { ctx.drawImage(video,0,0,canvas.width,canvas.height); }
+        const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
+        const data=imageData.data;
+        if (film.id==='ilford') applyBW(data); else applyGrade(data,film);
+        applyCurve(data,LUTS[film.curve]); applyGrain(data,film.grain);
+        ctx.putImageData(imageData,0,0);
+        applyHalation(canvas.width,canvas.height,film.halation);
+        applyVignette(canvas.width,canvas.height,film);
+        if (film.border) applyPolaroidBorder(canvas.width,canvas.height);
+        drawDateStamp(canvas.width,canvas.height,film);
+        canvas.toBlob(blob=>resolve({blob, url:URL.createObjectURL(blob)}),'image/jpeg',0.93);
+    });
+}
+
+// ═══════════════════════════════════════════
 //  FLASH
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
 function triggerFlash(){
     flashOverlay.style.transition='opacity 0.04s ease-in'; flashOverlay.style.opacity='0.9';
     setTimeout(()=>{ flashOverlay.style.transition='opacity 0.4s ease-out'; flashOverlay.style.opacity='0'; },70);
 }
 
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
 //  SAVE
-// ═══════════════════════════════════════
-async function savePhoto(blob, filename) {
+// ═══════════════════════════════════════════
+async function savePhoto(blob,filename) {
     const file=new File([blob],filename,{type:'image/jpeg'});
     if(navigator.share&&navigator.canShare?.({files:[file]})){
-        try{ await navigator.share({files:[file],title:'Retro Photo'}); return; }
-        catch(e){ if(e.name==='AbortError') return; }
+        try{ await navigator.share({files:[file],title:'Retro Photo'}); return; }catch(e){ if(e.name==='AbortError') return; }
     }
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a'); a.href=url; a.download=filename;
@@ -627,141 +641,147 @@ async function savePhoto(blob, filename) {
     setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-// ═══════════════════════════════════════
+// ═══════════════════════════════════════════
 //  GALLERY
-// ═══════════════════════════════════════
-function addToGallery(url, blob, filename, filmName) {
-    photoRoll.push({ url, blob, filename, filmName });
-    // Update badge
-    const n = photoRoll.length;
-    galleryBadge.textContent = n;
-    galleryBadge.style.display = 'flex';
-    // Add thumbnail
-    const thumb = document.createElement('div');
-    thumb.className = 'gallery-thumb';
-    thumb.dataset.idx = n - 1;
-    const img = document.createElement('img');
-    img.src = url; img.loading = 'lazy';
-    const idx = document.createElement('span');
-    idx.className = 'thumb-idx'; idx.textContent = n;
-    thumb.appendChild(img); thumb.appendChild(idx);
-    thumb.addEventListener('click', () => openViewer(parseInt(thumb.dataset.idx)));
-    galleryGrid.insertBefore(thumb, galleryGrid.firstChild); // newest first
-    galleryCount.textContent = n + ' SHOTS';
-}
-
-galleryBtn.addEventListener('click', () => {
-    if (photoRoll.length === 0) { statusEl.textContent = 'NO PHOTOS YET'; return; }
-    galleryOverlay.classList.add('open');
-});
-galleryClose.addEventListener('click', () => galleryOverlay.classList.remove('open'));
-
-// ═══════════════════════════════════════
-//  PHOTO VIEWER
-// ═══════════════════════════════════════
-function openViewer(idx) {
-    viewerIdx = idx;
-    renderViewer();
-    galleryOverlay.classList.remove('open');
-    photoViewer.classList.add('open');
-}
-
-function renderViewer() {
-    const p = photoRoll[viewerIdx];
-    viewerImg.src = p.url;
-    viewerCounter.textContent = `${viewerIdx+1} / ${photoRoll.length}  [${p.filmName}]`;
-    viewerPrev.style.opacity = viewerIdx > 0 ? '1' : '0.3';
-    viewerNext.style.opacity = viewerIdx < photoRoll.length-1 ? '1' : '0.3';
-}
-
-viewerBack.addEventListener('click', () => {
-    photoViewer.classList.remove('open');
-    galleryOverlay.classList.add('open');
-});
-viewerPrev.addEventListener('click', () => { if(viewerIdx>0){ viewerIdx--; renderViewer(); } });
-viewerNext.addEventListener('click', () => { if(viewerIdx<photoRoll.length-1){ viewerIdx++; renderViewer(); } });
-viewerSave.addEventListener('click', () => {
-    const p = photoRoll[viewerIdx];
-    savePhoto(p.blob, p.filename);
-});
-
-// Swipe left/right in viewer
-let swipeX = 0;
-viewerImg.addEventListener('touchstart', e => { swipeX = e.touches[0].clientX; }, { passive:true });
-viewerImg.addEventListener('touchend',   e => {
-    const dx = e.changedTouches[0].clientX - swipeX;
-    if (Math.abs(dx) > 50) {
-        if (dx < 0 && viewerIdx < photoRoll.length-1) { viewerIdx++; renderViewer(); }
-        if (dx > 0 && viewerIdx > 0)                  { viewerIdx--; renderViewer(); }
+// ═══════════════════════════════════════════
+function addToGallery(url,blob,filename,filmName,burstLabel) {
+    photoRoll.push({url,blob,filename,filmName});
+    const n=photoRoll.length;
+    galleryBadge.textContent=n; galleryBadge.style.display='flex';
+    const thumb=document.createElement('div'); thumb.className='gallery-thumb'; thumb.dataset.idx=n-1;
+    const img=document.createElement('img'); img.src=url; img.loading='lazy';
+    const idxLbl=document.createElement('span'); idxLbl.className='thumb-idx'; idxLbl.textContent=n;
+    thumb.appendChild(img); thumb.appendChild(idxLbl);
+    if (burstLabel) {
+        const bl=document.createElement('span'); bl.className='burst-badge'; bl.textContent=burstLabel;
+        thumb.appendChild(bl);
     }
-});
+    thumb.addEventListener('click',()=>openViewer(parseInt(thumb.dataset.idx)));
+    galleryGrid.insertBefore(thumb,galleryGrid.firstChild);
+    galleryCount.textContent=n+' SHOTS';
+}
 
-// ═══════════════════════════════════════
-//  SHUTTER
-// ═══════════════════════════════════════
+galleryBtn.addEventListener('click',()=>{ if(photoRoll.length===0){statusEl.textContent='NO PHOTOS YET';return;} galleryOverlay.classList.add('open'); });
+galleryClose.addEventListener('click',()=>galleryOverlay.classList.remove('open'));
+
+// ═══════════════════════════════════════════
+//  VIEWER
+// ═══════════════════════════════════════════
+function openViewer(idx){ viewerIdx=idx; renderViewer(); galleryOverlay.classList.remove('open'); photoViewer.classList.add('open'); }
+function renderViewer(){
+    const p=photoRoll[viewerIdx];
+    viewerImg.src=p.url;
+    viewerCounter.textContent=`${viewerIdx+1} / ${photoRoll.length}  [${p.filmName}]`;
+    viewerPrev.style.opacity=viewerIdx>0?'1':'0.3';
+    viewerNext.style.opacity=viewerIdx<photoRoll.length-1?'1':'0.3';
+}
+viewerBack.addEventListener('click',()=>{ photoViewer.classList.remove('open'); galleryOverlay.classList.add('open'); });
+viewerPrev.addEventListener('click',()=>{ if(viewerIdx>0){ viewerIdx--; renderViewer(); } });
+viewerNext.addEventListener('click',()=>{ if(viewerIdx<photoRoll.length-1){ viewerIdx++; renderViewer(); } });
+viewerSave.addEventListener('click',()=>{ const p=photoRoll[viewerIdx]; savePhoto(p.blob,p.filename); });
+let swipeX=0;
+viewerImg.addEventListener('touchstart',e=>{swipeX=e.touches[0].clientX;},{passive:true});
+viewerImg.addEventListener('touchend',e=>{ const dx=e.changedTouches[0].clientX-swipeX; if(Math.abs(dx)>50){ if(dx<0&&viewerIdx<photoRoll.length-1){viewerIdx++;renderViewer();} if(dx>0&&viewerIdx>0){viewerIdx--;renderViewer();} } });
+
+// ═══════════════════════════════════════════
+//  TIMER countdown helper
+// ═══════════════════════════════════════════
+function runTimer(seconds) {
+    return new Promise(resolve=>{
+        timerOverlay.classList.add('show');
+        timerNumber.textContent=seconds;
+        let count=seconds;
+        const iv=setInterval(()=>{
+            count--;
+            if(count<=0){ clearInterval(iv); timerOverlay.classList.remove('show'); resolve(); }
+            else { timerNumber.textContent=count; }
+        },1000);
+    });
+}
+
+// ═══════════════════════════════════════════
+//  BURST shoot helper
+// ═══════════════════════════════════════════
+async function shootBurst(film) {
+    const BURST_COUNT=3, BURST_DELAY=600;
+    burstIndicator.classList.add('show');
+    [0,1,2].forEach(i=>document.getElementById('bd'+i).classList.remove('taken'));
+    const results=[];
+    for(let i=0;i<BURST_COUNT;i++){
+        triggerFlash();
+        const {blob,url}=await captureFrame(film);
+        document.getElementById('bd'+i).classList.add('taken');
+        results.push({blob,url});
+        if(i<BURST_COUNT-1) await new Promise(r=>setTimeout(r,BURST_DELAY));
+    }
+    burstIndicator.classList.remove('show');
+    return results;
+}
+
+// ═══════════════════════════════════════════
+//  SHUTTER (main)
+// ═══════════════════════════════════════════
 captureBtn.addEventListener('click', async function() {
-    // Nếu đang review → đóng preview, tiếp tục chụp
     if (isReviewing) {
-        preview.style.display='none';
-        isReviewing=false;
+        preview.style.display='none'; isReviewing=false;
         statusEl.textContent='READY TO SHOOT';
-        captureBtn.textContent='📸';
+        captureBtn.textContent= shootMode==='burst'?'⚡': shootMode.startsWith('timer')?'⏱':'📸';
+        return;
+    }
+    if (isShooting) return;
+    isShooting=true; captureBtn.disabled=true;
+
+    const film=currentFilm;
+
+    // ── TIMER MODE ──
+    if (shootMode==='timer3' || shootMode==='timer10') {
+        const secs=shootMode==='timer3'?3:10;
+        statusEl.textContent=`TIMER ${secs}s...`;
+        await runTimer(secs);
+        triggerFlash();
+        statusEl.textContent='DEVELOPING FILM...';
+        const {blob,url}=await captureFrame(film);
+        const filename=`${film.short}_${Date.now()}.jpg`;
+        preview.src=url; preview.style.display='block'; isReviewing=true;
+        photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
+        addToGallery(url,blob,filename,film.name,'');
+        statusEl.textContent='✓ TIMER SHOT SAVED';
+        captureBtn.textContent='🔄'; captureBtn.disabled=false; isShooting=false;
+        await savePhoto(blob,filename);
         return;
     }
 
-    captureBtn.disabled=true;
+    // ── BURST MODE ──
+    if (shootMode==='burst') {
+        statusEl.textContent='BURST SHOOTING...';
+        const results=await shootBurst(film);
+        // Show last frame as preview
+        const last=results[results.length-1];
+        preview.src=last.url; preview.style.display='block'; isReviewing=true;
+        for(let i=0;i<results.length;i++){
+            const {blob,url}=results[i];
+            const filename=`${film.short}_BURST${i+1}_${Date.now()}.jpg`;
+            photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
+            addToGallery(url,blob,filename,film.name,`${i+1}/3`);
+            savePhoto(blob,filename);
+        }
+        statusEl.textContent=`✓ BURST ×3 SAVED`;
+        captureBtn.textContent='🔄'; captureBtn.disabled=false; isShooting=false;
+        return;
+    }
+
+    // ── SINGLE MODE ──
     statusEl.textContent='DEVELOPING FILM...';
     triggerFlash();
     await new Promise(r=>setTimeout(r,60));
-
-    const film=currentFilm;
-    canvas.width  = video.videoWidth  || 1280;
-    canvas.height = video.videoHeight || 720;
-
-    ctx.filter='none';
-    if (facingMode==='user') {
-        ctx.save(); ctx.translate(canvas.width,0); ctx.scale(-1,1);
-        ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
-    } else {
-        ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    }
-
-    const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
-    const data=imageData.data;
-    if (film.id==='ilford') { applyBW(data); }
-    else { applyGrade(data,film); }
-    applyCurve(data,LUTS[film.curve]);
-    applyGrain(data,film.grain);
-    ctx.putImageData(imageData,0,0);
-
-    applyHalation(canvas.width,canvas.height,film.halation);
-    applyVignette(canvas.width,canvas.height,film);
-    if (film.border) applyPolaroidBorder(canvas.width,canvas.height);
-    drawDateStamp(canvas.width,canvas.height,film);
-
-    canvas.toBlob(async(blob)=>{
-        if(!blob){ statusEl.textContent='ERROR'; captureBtn.disabled=false; return; }
-
-        const filename=`${film.short}_${Date.now()}.jpg`;
-        const url=URL.createObjectURL(blob);
-
-        // Hiển thị preview ngay trên viewfinder
-        preview.src=url;
-        preview.style.display='block';
-        isReviewing=true;
-
-        photoCount++;
-        counterEl.textContent=String(photoCount).padStart(2,'0');
-        // Thêm vào gallery roll
-        addToGallery(url, blob, filename, film.name);
-
-        statusEl.textContent='✓ TAP TO SHOOT AGAIN  |  🖼️ VIEW ROLL';
-        captureBtn.textContent='🔄';
-        captureBtn.disabled=false;
-
-        // Save tự động
-        await savePhoto(blob,filename);
-    },'image/jpeg',0.93);
+    const {blob,url}=await captureFrame(film);
+    const filename=`${film.short}_${Date.now()}.jpg`;
+    preview.src=url; preview.style.display='block'; isReviewing=true;
+    photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
+    addToGallery(url,blob,filename,film.name,'');
+    statusEl.textContent='✓ TAP TO SHOOT AGAIN  |  🖼️ VIEW ROLL';
+    captureBtn.textContent='🔄'; captureBtn.disabled=false; isShooting=false;
+    await savePhoto(blob,filename);
 });
 
 window.addEventListener('beforeunload',()=>{ if(activeStream) activeStream.getTracks().forEach(t=>t.stop()); });
