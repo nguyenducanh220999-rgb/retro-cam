@@ -7,269 +7,203 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background: #111; color: #fff;
+            background: #0d0d0d; color: #fff;
             font-family: 'Courier New', Courier, monospace;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             height: 100vh; overflow: hidden;
         }
+
         .camera-body {
-            background: linear-gradient(160deg, #2a2a2a, #1a1a1a);
-            border: 3px solid #3a3a3a; border-radius: 18px;
+            background: linear-gradient(160deg, #242424, #161616);
+            border: 2px solid #2e2e2e; border-radius: 20px;
             padding: 12px 12px 10px;
-            box-shadow: inset 0 0 12px #000, 0 12px 30px rgba(0,0,0,0.8);
+            box-shadow: inset 0 0 14px #000, 0 16px 40px rgba(0,0,0,0.9);
             width: 100%; max-width: 420px; height: 97vh;
             display: flex; flex-direction: column; gap: 7px;
         }
 
         /* ── Top bar ── */
-        .top-bar { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .top-bar { display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
         .led-display {
-            background: #000; color: #ff3333; font-size: 13px;
-            padding: 4px 8px; border-radius: 3px; font-weight: bold;
-            border: 1px solid #2a2a2a; box-shadow: inset 0 0 4px #ff000066; letter-spacing: 1px;
+            background:#000; color:#ff3333; font-size:12px;
+            padding:4px 9px; border-radius:4px; font-weight:bold;
+            border:1px solid #1e1e1e; box-shadow:inset 0 0 5px #ff000055; letter-spacing:1px;
         }
-        .film-name { font-size: 10px; color: #ffaa00; letter-spacing: 1.5px; text-transform: uppercase; max-width: 160px; text-align: right; }
+        .film-name { font-size:10px; color:#ffaa00; letter-spacing:1.5px; text-transform:uppercase; max-width:160px; text-align:right; line-height:1.3; }
 
-        /* ── Mode bar (Photo / Burst / Timer) ── */
-        .mode-bar {
-            display: flex; gap: 6px; justify-content: center; flex-shrink: 0;
-        }
+        /* ── Mode bar ── */
+        .mode-bar { display:flex; gap:5px; justify-content:center; flex-shrink:0; }
         .mode-btn {
-            font-size: 10px; padding: 4px 10px; border-radius: 20px; cursor: pointer;
-            border: 1.5px solid #444; background: #1a1a1a; color: #888;
-            letter-spacing: 0.5px; transition: all 0.15s;
+            font-size:10px; padding:5px 11px; border-radius:20px; cursor:pointer;
+            border:1.5px solid #333; background:#161616; color:#666;
+            letter-spacing:0.5px; transition:all 0.15s; display:flex; align-items:center; gap:4px;
         }
-        .mode-btn.active { border-color: #ffaa00; color: #ffaa00; background: #2a2200; }
+        .mode-btn.active { border-color:#ffaa00; color:#ffaa00; background:#1e1800; }
+        .mode-btn svg { width:12px; height:12px; }
 
         /* ── Viewfinder ── */
         .viewfinder {
-            flex: 1; border: 2px solid #000; background: #111;
-            position: relative; overflow: hidden; border-radius: 6px; min-height: 0;
-            touch-action: none;
+            flex:1; border:2px solid #111; background:#0a0a0a;
+            position:relative; overflow:hidden; border-radius:8px; min-height:0;
+            touch-action:none;
         }
-        #webcam { width: 100%; height: 100%; object-fit: cover; display: block; }
-        #webcam.mirrored { transform: scaleX(-1); }
-        #preview {
-            display: none; position: absolute; inset: 0;
-            width: 100%; height: 100%; object-fit: cover; z-index: 2;
-        }
-        #flash-overlay {
-            position: absolute; inset: 0; background: white;
-            opacity: 0; z-index: 10; pointer-events: none;
-        }
+        #webcam { width:100%; height:100%; object-fit:cover; display:block; }
+        #webcam.mirrored { transform:scaleX(-1); }
+        #preview { display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:2; }
+        #flash-overlay { position:absolute; inset:0; background:white; opacity:0; z-index:10; pointer-events:none; }
+
         /* Corner brackets */
-        .viewfinder::before, .viewfinder::after, .vf-br::before, .vf-br::after {
-            content: ''; position: absolute; width: 16px; height: 16px;
-            border-color: rgba(255,255,255,0.35); border-style: solid; z-index: 5;
+        .viewfinder::before,.viewfinder::after,.vf-br::before,.vf-br::after {
+            content:''; position:absolute; width:18px; height:18px;
+            border-color:rgba(255,255,255,0.3); border-style:solid; z-index:5;
         }
-        .viewfinder::before { top:6px; left:6px; border-width: 2px 0 0 2px; }
-        .viewfinder::after  { top:6px; right:6px; border-width: 2px 2px 0 0; }
-        .vf-br::before { bottom:6px; left:6px; border-width: 0 0 2px 2px; }
-        .vf-br::after  { bottom:6px; right:6px; border-width: 0 2px 2px 0; }
+        .viewfinder::before { top:8px; left:8px; border-width:2px 0 0 2px; }
+        .viewfinder::after  { top:8px; right:8px; border-width:2px 2px 0 0; }
+        .vf-br::before { bottom:8px; left:8px; border-width:0 0 2px 2px; }
+        .vf-br::after  { bottom:8px; right:8px; border-width:0 2px 2px 0; }
 
         /* Grid overlay */
-        #grid-overlay {
-            position: absolute; inset: 0; z-index: 4; pointer-events: none;
-            display: none;
-        }
-        #grid-overlay.show { display: block; }
-        .grid-line-h, .grid-line-v {
-            position: absolute; background: rgba(255,255,255,0.18);
-        }
-        .grid-line-h { left: 0; right: 0; height: 1px; }
-        .grid-line-v { top: 0; bottom: 0; width: 1px; }
+        #grid-overlay { position:absolute; inset:0; z-index:4; pointer-events:none; display:none; }
+        #grid-overlay.show { display:block; }
+        .gl { position:absolute; background:rgba(255,255,255,0.2); }
+        .gl.h { left:0; right:0; height:1px; }
+        .gl.v { top:0; bottom:0; width:1px; }
 
-        /* Timer countdown overlay */
+        /* Timer overlay */
         #timer-overlay {
-            position: absolute; inset: 0; z-index: 20;
-            display: none; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.35);
+            position:absolute; inset:0; z-index:20; display:none;
+            align-items:center; justify-content:center; background:rgba(0,0,0,0.4);
         }
-        #timer-overlay.show { display: flex; }
+        #timer-overlay.show { display:flex; }
         #timer-number {
-            font-size: 96px; font-weight: bold; color: #fff;
-            text-shadow: 0 0 30px rgba(255,170,0,0.8), 0 0 60px rgba(255,170,0,0.4);
-            font-family: 'Courier New', monospace;
-            animation: timerPulse 1s ease-in-out infinite;
+            font-size:96px; font-weight:bold; color:#fff;
+            text-shadow:0 0 30px rgba(255,170,0,0.9);
+            animation:pulse 1s ease-in-out infinite;
         }
-        @keyframes timerPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.15);opacity:0.8} }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
 
-        /* Burst indicator */
-        #burst-indicator {
-            position: absolute; top: 10px; right: 10px; z-index: 6;
-            display: none; gap: 4px;
-        }
-        #burst-indicator.show { display: flex; }
-        .burst-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5);
-        }
-        .burst-dot.taken { background: #ffaa00; }
+        /* Burst dots */
+        #burst-indicator { position:absolute; top:10px; right:10px; z-index:6; display:none; gap:5px; }
+        #burst-indicator.show { display:flex; }
+        .burst-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.25); border:1px solid rgba(255,255,255,0.4); }
+        .burst-dot.taken { background:#ffaa00; }
 
         /* ── Zoom bar ── */
-        .zoom-bar { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 0 4px; }
-        .zoom-label { font-size: 10px; color: #888; width: 36px; text-align: right; letter-spacing: 1px; }
+        .zoom-bar { flex-shrink:0; display:flex; align-items:center; gap:8px; padding:0 2px; }
+        .zoom-label { font-size:10px; color:#666; width:34px; text-align:right; letter-spacing:1px; }
         #zoom-slider {
-            flex: 1; -webkit-appearance: none; appearance: none; height: 3px; border-radius: 2px;
-            background: linear-gradient(to right, #ffaa00 var(--pct,0%), #444 var(--pct,0%));
-            outline: none; cursor: pointer;
+            flex:1; -webkit-appearance:none; appearance:none; height:3px; border-radius:2px;
+            background:linear-gradient(to right, #ffaa00 var(--pct,0%), #333 var(--pct,0%));
+            outline:none; cursor:pointer;
         }
         #zoom-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 16px; height: 16px;
-            border-radius: 50%; background: #ffaa00; border: 2px solid #fff; cursor: pointer;
+            -webkit-appearance:none; width:16px; height:16px;
+            border-radius:50%; background:#ffaa00; border:2px solid #fff; cursor:pointer;
         }
         .zoom-btn {
-            background: #222; border: 1.5px solid #444; color: #aaa;
-            width: 28px; height: 28px; border-radius: 50%; font-size: 14px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            background:#1e1e1e; border:1.5px solid #333; color:#888;
+            width:26px; height:26px; border-radius:50%; font-size:15px;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
         }
+        .zoom-btn:active { background:#2a2a2a; }
 
         /* ── Filter strip ── */
         .filter-strip {
-            flex-shrink: 0; display: flex; gap: 6px;
-            overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none;
+            flex-shrink:0; display:flex; gap:6px;
+            overflow-x:auto; padding:2px 0 4px; scrollbar-width:none;
         }
-        .filter-strip::-webkit-scrollbar { display: none; }
+        .filter-strip::-webkit-scrollbar { display:none; }
         .filter-btn {
-            flex-shrink: 0; display: flex; flex-direction: column;
-            align-items: center; gap: 3px; cursor: pointer;
-            padding: 4px 6px; border-radius: 8px;
-            border: 1.5px solid transparent; background: #222;
-            transition: border-color 0.15s; min-width: 52px;
+            flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:3px;
+            cursor:pointer; padding:4px 5px; border-radius:8px;
+            border:1.5px solid transparent; background:#1a1a1a; min-width:50px;
+            transition:border-color 0.15s;
         }
-        .filter-btn.active { border-color: #ffaa00; background: #2a2200; }
-        .filter-thumb { width: 40px; height: 40px; border-radius: 5px; overflow: hidden; background: #333; }
-        .filter-thumb canvas { width: 100%; height: 100%; display: block; }
-        .filter-label { font-size: 8px; color: #aaa; text-align: center; letter-spacing: 0.5px; }
-        .filter-btn.active .filter-label { color: #ffaa00; }
+        .filter-btn.active { border-color:#ffaa00; background:#1e1800; }
+        .filter-thumb { width:40px; height:40px; border-radius:5px; overflow:hidden; background:#222; }
+        .filter-thumb canvas { width:100%; height:100%; display:block; }
+        .filter-label { font-size:8px; color:#666; text-align:center; }
+        .filter-btn.active .filter-label { color:#ffaa00; }
 
         /* ── Bottom bar ── */
         .bottom-bar {
-            flex-shrink: 0; display: flex; align-items: center;
-            justify-content: space-between; padding: 0 4px;
+            flex-shrink:0; display:flex; align-items:center;
+            justify-content:space-between; padding:0 4px;
         }
+
+        /* Flip button */
+        .btn-flip {
+            width:48px; height:48px; border-radius:50%;
+            background:#1e1e1e; border:1.5px solid #333;
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; transition:background 0.1s;
+        }
+        .btn-flip:active { background:#2a2a2a; }
+        .btn-flip svg { width:22px; height:22px; }
+
+        /* Shutter button */
         .shutter-btn {
-            background: radial-gradient(circle, #e67e22, #c0392b);
-            border: 3px solid #922b21; color: white;
-            width: 64px; height: 64px; font-size: 22px; border-radius: 50%;
-            cursor: pointer; box-shadow: 0 5px 0 #6e1f16, 0 8px 15px rgba(0,0,0,0.5);
-            transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
+            width:68px; height:68px; border-radius:50%; cursor:pointer;
+            background:radial-gradient(circle at 38% 35%, #f0f0f0, #c0c0c0);
+            border:3px solid #888;
+            box-shadow:0 0 0 4px #2a2a2a, 0 6px 0 #555, 0 10px 18px rgba(0,0,0,0.6);
+            transition:all 0.1s;
+            display:flex; align-items:center; justify-content:center;
         }
-        .shutter-btn:active { box-shadow: 0 1px 0 #6e1f16; transform: translateY(4px); }
-        .shutter-btn:disabled { opacity: 0.4; transform: none; }
-        .side-btn {
-            background: #222; border: 1.5px solid #444; color: #aaa;
-            width: 44px; height: 44px; border-radius: 50%; font-size: 18px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: background 0.15s; position: relative;
+        .shutter-btn:active {
+            box-shadow:0 0 0 4px #2a2a2a, 0 2px 0 #555, 0 4px 8px rgba(0,0,0,0.6);
+            transform:translateY(4px);
         }
-        .side-btn:active { background: #333; }
-        .side-btn.active-toggle { border-color: #ffaa00; color: #ffaa00; }
-        /* Light Leak live overlay */
-        #leak-overlay { position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity 0.3s; }
-        #leak-overlay.show { opacity:1; }
+        .shutter-btn:disabled { opacity:0.4; transform:none; }
+        /* Red dot on shutter */
+        .shutter-dot {
+            width:16px; height:16px; border-radius:50%;
+            background:radial-gradient(circle at 38% 35%, #ff6655, #cc1100);
+            box-shadow:0 0 6px rgba(200,0,0,0.5);
+        }
+
+        /* Gallery button */
+        .btn-gallery {
+            width:48px; height:48px; border-radius:50%;
+            background:#1e1e1e; border:1.5px solid #333;
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; transition:background 0.1s; position:relative;
+        }
+        .btn-gallery:active { background:#2a2a2a; }
+        .btn-gallery svg { width:22px; height:22px; }
         .gallery-badge {
-            position: absolute; top: -4px; right: -4px;
-            background: #ff3333; color: #fff; font-size: 9px; font-weight: bold;
-            width: 16px; height: 16px; border-radius: 50%;
-            display: none; align-items: center; justify-content: center;
+            position:absolute; top:-4px; right:-4px;
+            background:#ff3333; color:#fff; font-size:9px; font-weight:bold;
+            width:17px; height:17px; border-radius:50%;
+            display:none; align-items:center; justify-content:center;
         }
+
         #status {
-            font-size: 10px; color: #ffaa00; text-align: center;
-            flex-shrink: 0; letter-spacing: 1px; min-height: 14px;
+            font-size:10px; color:#555; text-align:center;
+            flex-shrink:0; letter-spacing:1px; min-height:14px;
         }
 
         /* ══ GALLERY OVERLAY ══ */
-        #gallery-overlay {
-            display: none; position: fixed; inset: 0;
-            background: #000; z-index: 100; flex-direction: column;
-        }
-        #gallery-overlay.open { display: flex; }
-        .gallery-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 16px 10px; border-bottom: 1px solid #222;
-        }
-        .gallery-title { font-size: 13px; color: #ffaa00; letter-spacing: 2px; }
-        .gallery-close {
-            background: #222; border: 1.5px solid #444; color: #fff;
-            width: 36px; height: 36px; border-radius: 50%; font-size: 18px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .gallery-grid {
-            flex: 1; overflow-y: auto; padding: 8px;
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
-        }
-        .gallery-thumb {
-            aspect-ratio: 1; overflow: hidden; cursor: pointer; border-radius: 3px;
-            position: relative; background: #111;
-        }
-        .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .gallery-thumb .thumb-idx {
-            position: absolute; bottom: 3px; right: 4px;
-            font-size: 8px; color: rgba(255,255,255,0.6);
-        }
-        /* Burst group badge */
-        .gallery-thumb .burst-badge {
-            position: absolute; top: 3px; left: 4px;
-            background: rgba(255,170,0,0.85); color: #000;
-            font-size: 8px; font-weight: bold; padding: 1px 4px; border-radius: 3px;
-        }
+        #gallery-overlay { display:none; position:fixed; inset:0; background:#000; z-index:100; flex-direction:column; }
+        #gallery-overlay.open { display:flex; }
+        .gallery-header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; border-bottom:1px solid #1e1e1e; }
+        .gallery-title { font-size:13px; color:#ffaa00; letter-spacing:2px; }
+        .gallery-close { background:#1e1e1e; border:1px solid #333; color:#fff; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .gallery-grid { flex:1; overflow-y:auto; padding:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:3px; }
+        .gallery-thumb { aspect-ratio:1; overflow:hidden; cursor:pointer; border-radius:3px; position:relative; background:#111; }
+        .gallery-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+        .gallery-thumb .thumb-idx { position:absolute; bottom:3px; right:4px; font-size:8px; color:rgba(255,255,255,0.5); }
+        .gallery-thumb .burst-badge { position:absolute; top:3px; left:4px; background:rgba(255,170,0,0.85); color:#000; font-size:8px; font-weight:bold; padding:1px 4px; border-radius:3px; }
 
         /* ══ PHOTO VIEWER ══ */
-        #photo-viewer {
-            display: none; position: fixed; inset: 0;
-            background: #000; z-index: 200; flex-direction: column;
-            align-items: center; justify-content: center;
-        }
-        #photo-viewer.open { display: flex; }
-        #viewer-img { max-width: 100%; max-height: calc(100vh - 80px); object-fit: contain; border-radius: 4px; }
-        .viewer-bar {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; background: linear-gradient(transparent, rgba(0,0,0,0.8));
-        }
-        .viewer-btn {
-            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
-            color: #fff; padding: 8px 14px; border-radius: 20px; font-size: 12px;
-            cursor: pointer; font-family: 'Courier New', monospace;
-        }
-        .viewer-btn:active { background: rgba(255,255,255,0.22); }
-        .viewer-counter { font-size: 11px; color: #aaa; letter-spacing: 1px; }
-        .viewer-back {
-            position: absolute; top: 14px; left: 14px;
-            background: rgba(0,0,0,0.5); border: 1px solid #444;
-            color: #fff; width: 36px; height: 36px; border-radius: 50%;
-            font-size: 18px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        /* ── Frame Picker Sheet ── */
-        #frame-sheet {
-            display:none; position:fixed; bottom:0; left:0; right:0; z-index:300;
-            background:#111; border-top:2px solid #333; border-radius:18px 18px 0 0;
-            padding:16px 12px 24px;
-        }
-        #frame-sheet.open { display:block; }
-        .frame-sheet-title { font-size:12px; color:#ffaa00; letter-spacing:2px; text-align:center; margin-bottom:14px; }
-        .frame-options { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-        .frame-opt {
-            background:#1e1e1e; border:1.5px solid #333; border-radius:10px;
-            padding:10px 6px 8px; cursor:pointer; text-align:center;
-            transition:border-color 0.15s;
-        }
-        .frame-opt.active { border-color:#ffaa00; background:#2a2200; }
-        .frame-opt-preview {
-            width:100%; aspect-ratio:4/3; background:#2a2a2a;
-            border-radius:4px; margin-bottom:6px; overflow:hidden; position:relative;
-        }
-        .frame-opt-preview canvas { width:100%; height:100%; display:block; }
-        .frame-opt-label { font-size:10px; color:#aaa; letter-spacing:0.5px; }
-        .frame-opt.active .frame-opt-label { color:#ffaa00; }
-        .frame-sheet-close {
-            display:block; margin:16px auto 0; background:#222; border:1px solid #444;
-            color:#aaa; padding:8px 24px; border-radius:20px; font-size:12px; cursor:pointer;
-            font-family:"Courier New",monospace;
-        }
+        #photo-viewer { display:none; position:fixed; inset:0; background:#000; z-index:200; flex-direction:column; align-items:center; justify-content:center; }
+        #photo-viewer.open { display:flex; }
+        #viewer-img { max-width:100%; max-height:calc(100vh - 80px); object-fit:contain; border-radius:4px; }
+        .viewer-bar { position:absolute; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:linear-gradient(transparent,rgba(0,0,0,0.8)); }
+        .viewer-btn { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; padding:8px 14px; border-radius:20px; font-size:12px; cursor:pointer; font-family:'Courier New',monospace; }
+        .viewer-btn:active { background:rgba(255,255,255,0.2); }
+        .viewer-counter { font-size:11px; color:#888; letter-spacing:1px; }
+        .viewer-back { position:absolute; top:14px; left:14px; background:rgba(0,0,0,0.5); border:1px solid #333; color:#fff; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
     </style>
 </head>
 <body>
@@ -280,12 +214,39 @@
         <div class="film-name" id="film-name">Kodak Gold 200</div>
     </div>
 
-    <!-- Mode selector -->
+    <!-- Mode bar with SVG icons -->
     <div class="mode-bar">
-        <button class="mode-btn active" data-mode="single">📷 SINGLE</button>
-        <button class="mode-btn" data-mode="burst">⚡ BURST ×3</button>
-        <button class="mode-btn" data-mode="timer3">⏱ 3s</button>
-        <button class="mode-btn" data-mode="timer10">⏱ 10s</button>
+        <button class="mode-btn grid-btn" id="grid-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+            GRID
+        </button>
+        <button class="mode-btn active" data-mode="single">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/><path d="M6.3 6.3A8 8 0 1 0 17.7 17.7"/>
+                <path d="M3 3l18 18" stroke-width="0" fill="none"/>
+                <rect x="3" y="3" width="18" height="18" rx="3" stroke-width="2" fill="none"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+            SINGLE
+        </button>
+        <button class="mode-btn" data-mode="burst">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            BURST ×3
+        </button>
+        <button class="mode-btn" data-mode="timer3">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 3h6"/><path d="M12 3v2"/>
+            </svg>
+            3s
+        </button>
+        <button class="mode-btn" data-mode="timer10">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 3h6"/><path d="M12 3v2"/>
+            </svg>
+            10s
+        </button>
     </div>
 
     <div class="viewfinder" id="viewfinder">
@@ -293,29 +254,14 @@
         <video id="webcam" autoplay playsinline muted></video>
         <img id="preview" alt="Preview">
         <div id="flash-overlay"></div>
-
+        <div id="timer-overlay"><span id="timer-number">3</span></div>
         <!-- Grid overlay -->
         <div id="grid-overlay">
-            <div class="grid-line-h" style="top:33.3%"></div>
-            <div class="grid-line-h" style="top:66.6%"></div>
-            <div class="grid-line-v" style="left:33.3%"></div>
-            <div class="grid-line-v" style="left:66.6%"></div>
+            <div class="gl h" style="top:33.3%"></div>
+            <div class="gl h" style="top:66.6%"></div>
+            <div class="gl v" style="left:33.3%"></div>
+            <div class="gl v" style="left:66.6%"></div>
         </div>
-
-        <!-- Timer countdown -->
-        <div id="timer-overlay">
-            <span id="timer-number">3</span>
-        </div>
-
-        <!-- Light Leak canvas overlay (live preview) -->
-        <canvas id="leak-overlay"></canvas>
-
-        <!-- Frame border live preview -->
-        <canvas id="frame-overlay" style="position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;"></canvas>
-
-        <!-- Frame border live preview -->
-        <canvas id="frame-overlay" style="position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;"></canvas>
-        <!-- Burst dots indicator -->
         <div id="burst-indicator">
             <div class="burst-dot" id="bd0"></div>
             <div class="burst-dot" id="bd1"></div>
@@ -323,6 +269,7 @@
         </div>
     </div>
 
+    <!-- Zoom bar -->
     <div class="zoom-bar">
         <button class="zoom-btn" id="zoom-out">−</button>
         <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1">
@@ -333,17 +280,28 @@
     <div class="filter-strip" id="filter-strip"></div>
 
     <div class="bottom-bar">
-        <button class="side-btn" id="flip-btn">🔄</button>
-        <button class="shutter-btn" id="capture-btn">📸</button>
-        <div style="display:flex;flex-direction:column;gap:6px;align-items:center">
-            <button class="side-btn" id="gallery-btn">
-                🖼️<span class="gallery-badge" id="gallery-badge"></span>
-            </button>
-            <button class="side-btn" id="grid-btn" title="Toggle grid">⊞</button>
-            <button class="side-btn" id="leak-btn" title="Toggle light leak">🌈</button>
-            <button class="side-btn" id="frame-btn" title="Film frame">🎞️</button>
-            <button class="side-btn" id="frame-btn" title="Film frame">🎞️</button>
-        </div>
+        <!-- Flip camera -->
+        <button class="btn-flip" id="flip-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.8">
+                <path d="M1 4v6h6"/><path d="M23 20v-6h-6"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/>
+            </svg>
+        </button>
+
+        <!-- Shutter -->
+        <button class="shutter-btn" id="capture-btn">
+            <div class="shutter-dot" id="shutter-dot"></div>
+        </button>
+
+        <!-- Gallery -->
+        <button class="btn-gallery" id="gallery-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.8">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <span class="gallery-badge" id="gallery-badge"></span>
+        </button>
     </div>
 
     <p id="status">INITIALIZING LENS...</p>
@@ -356,7 +314,7 @@
     <div class="gallery-header">
         <div class="gallery-title">📷 ROLL</div>
         <div style="display:flex;gap:8px;align-items:center">
-            <span style="font-size:11px;color:#666" id="gallery-count"></span>
+            <span style="font-size:11px;color:#444" id="gallery-count"></span>
             <button class="gallery-close" id="gallery-close">✕</button>
         </div>
     </div>
@@ -380,27 +338,25 @@
 //  FILM PRESETS
 // ═══════════════════════════════════════════
 const FILMS = [
-    { id:'kodak_gold',  name:'Kodak Gold 200',  short:'KG200', liveFilter:'saturate(1.1) sepia(0.18) brightness(1.05) contrast(1.05)',     grade:{rMul:1.12,gMul:1.04,bMul:0.82,rLift:14,gLift:10,bLift:8},  colorCast:null, curve:'soft_s',  grain:28, vignetteInner:0.28,vignetteOuter:0.78,vignetteAlpha:0.60, border:false, halation:{r:255,g:80,b:20,strength:0.06},   stampColor:'#ff6600',stampShadow:'#ff3300' },
-    { id:'kodak_portra',name:'Kodak Portra 400', short:'P400',  liveFilter:'saturate(0.88) brightness(1.08) contrast(0.92) hue-rotate(5deg)',grade:{rMul:1.06,gMul:1.03,bMul:0.96,rLift:18,gLift:14,bLift:12}, colorCast:null, curve:'flat',    grain:18, vignetteInner:0.32,vignetteOuter:0.82,vignetteAlpha:0.45, border:false, halation:{r:255,g:120,b:80,strength:0.05},  stampColor:'#ff8833',stampShadow:'#cc4400' },
-    { id:'kodak_ultra', name:'Kodak Ultramax',   short:'UMX',   liveFilter:'saturate(1.25) contrast(1.1) brightness(1.02) hue-rotate(-5deg)',grade:{rMul:1.18,gMul:1.00,bMul:0.78,rLift:10,gLift:8,bLift:14},  colorCast:null, curve:'punchy_s',grain:32, vignetteInner:0.25,vignetteOuter:0.72,vignetteAlpha:0.65, border:false, halation:{r:255,g:60,b:10,strength:0.08},   stampColor:'#ff4400',stampShadow:'#aa2200' },
-    { id:'fuji_sup',    name:'Fuji Superia 400', short:'FSP',   liveFilter:'saturate(1.05) hue-rotate(15deg) brightness(1.03) contrast(1.05)',grade:{rMul:0.98,gMul:1.08,bMul:1.02,rLift:10,gLift:12,bLift:14}, colorCast:null, curve:'soft_s',  grain:22, vignetteInner:0.30,vignetteOuter:0.80,vignetteAlpha:0.50, border:false, halation:{r:80,g:200,b:120,strength:0.04},  stampColor:'#00dd66',stampShadow:'#008833' },
-    { id:'fuji_vel',    name:'Fuji Velvia 50',   short:'VLV',   liveFilter:'saturate(1.5) contrast(1.18) brightness(0.97)',                 grade:{rMul:1.10,gMul:1.06,bMul:1.14,rLift:4,gLift:4,bLift:6},     colorCast:null, curve:'punchy_s',grain:12, vignetteInner:0.22,vignetteOuter:0.70,vignetteAlpha:0.70, border:false, halation:{r:200,g:60,b:200,strength:0.04},  stampColor:'#ff33cc',stampShadow:'#990066' },
-    { id:'fuji_pro',    name:'Fuji Pro 400H',    short:'P4H',   liveFilter:'saturate(0.80) brightness(1.12) contrast(0.88) hue-rotate(10deg)',grade:{rMul:0.97,gMul:1.05,bMul:1.08,rLift:20,gLift:18,bLift:16}, colorCast:null, curve:'flat',    grain:16, vignetteInner:0.35,vignetteOuter:0.85,vignetteAlpha:0.38, border:false, halation:{r:100,g:180,b:255,strength:0.04}, stampColor:'#44aaff',stampShadow:'#0044aa' },
-    { id:'lomo',        name:'Lomo 800',         short:'LOM',   liveFilter:'saturate(1.4) contrast(1.2) brightness(0.95)',                  grade:{rMul:1.20,gMul:0.95,bMul:1.10,rLift:6,gLift:4,bLift:8},     colorCast:null, curve:'punchy_s',grain:48, vignetteInner:0.18,vignetteOuter:0.62,vignetteAlpha:0.80, border:false, halation:{r:255,g:30,b:180,strength:0.07},  stampColor:'#ff2288',stampShadow:'#aa0044' },
-    { id:'polaroid',    name:'Polaroid 600',     short:'POL',   liveFilter:'saturate(0.75) brightness(1.10) contrast(0.85) hue-rotate(-8deg)',grade:{rMul:1.02,gMul:1.00,bMul:1.05,rLift:24,gLift:22,bLift:20}, colorCast:null, curve:'flat',    grain:14, vignetteInner:0.40,vignetteOuter:0.90,vignetteAlpha:0.30, border:true,  halation:{r:200,g:200,b:255,strength:0.04}, stampColor:'#aabbff',stampShadow:'#4455aa' },
-    { id:'agfa',        name:'Agfa Vista 200',   short:'AGF',   liveFilter:'saturate(1.15) hue-rotate(-10deg) brightness(1.04) contrast(1.08)',grade:{rMul:1.14,gMul:1.02,bMul:0.86,rLift:12,gLift:9,bLift:6},  colorCast:null, curve:'soft_s',  grain:24, vignetteInner:0.27,vignetteOuter:0.75,vignetteAlpha:0.55, border:false, halation:{r:255,g:100,b:0,strength:0.06},   stampColor:'#ff9900',stampShadow:'#cc5500' },
-    { id:'ilford',      name:'Ilford HP5',       short:'B&W',   liveFilter:'grayscale(1) contrast(1.1) brightness(1.02)',                   grade:null,                                                           colorCast:null, curve:'bw_s',    grain:38, vignetteInner:0.24,vignetteOuter:0.74,vignetteAlpha:0.68, border:false, halation:null,                              stampColor:'#ffffff',stampShadow:'#888888' },
-    // ── FUJIFILM X-T30 II ──
-    { id:'fuji_classic_chrome',  name:'Classic Chrome',  short:'CLR-C', fuji:true, liveFilter:'saturate(0.65) contrast(0.9) brightness(1.0) hue-rotate(-5deg) sepia(0.12)',             grade:{rMul:0.96,gMul:1.02,bMul:1.04,rLift:10,gLift:14,bLift:12}, colorCast:{r:-8,g:18,b:-4},  curve:'flat',    grain:15, vignetteInner:0.30,vignetteOuter:0.80,vignetteAlpha:0.20, border:false, halation:{r:60,g:180,b:80,strength:0.04},   stampColor:'#66bb66',stampShadow:'#224422' },
-    { id:'fuji_classic_neg',     name:'Classic Neg.',    short:'CLR-N', fuji:true, liveFilter:'saturate(0.78) contrast(1.0) brightness(1.03) sepia(0.22) hue-rotate(3deg)',             grade:{rMul:1.10,gMul:1.02,bMul:0.84,rLift:16,gLift:12,bLift:8},  colorCast:{r:22,g:10,b:-10}, curve:'soft_s',  grain:35, vignetteInner:0.27,vignetteOuter:0.76,vignetteAlpha:0.25, border:false, halation:{r:255,g:140,b:30,strength:0.06},  stampColor:'#ddaa44',stampShadow:'#885500' },
-    { id:'fuji_reala_ace',       name:'Reala Ace',       short:'REALA', fuji:true, liveFilter:'saturate(0.88) contrast(0.92) brightness(1.04)',                                         grade:{rMul:1.01,gMul:1.01,bMul:1.00,rLift:12,gLift:12,bLift:12}, colorCast:null,              curve:'soft_s',  grain:10, vignetteInner:0.35,vignetteOuter:0.85,vignetteAlpha:0.10, border:false, halation:{r:220,g:200,b:180,strength:0.03}, stampColor:'#cccccc',stampShadow:'#666666' },
-    { id:'fuji_nostalgic_neg',   name:'Nostalgic Neg',   short:'NST-N', fuji:true, liveFilter:'saturate(0.72) contrast(0.85) brightness(1.06) sepia(0.28) hue-rotate(2deg)',            grade:{rMul:1.08,gMul:1.00,bMul:0.88,rLift:20,gLift:15,bLift:10}, colorCast:{r:18,g:8,b:-6},   curve:'flat',    grain:30, vignetteInner:0.28,vignetteOuter:0.78,vignetteAlpha:0.25, border:false, halation:{r:210,g:140,b:60,strength:0.05},  stampColor:'#cc9955',stampShadow:'#664422' },
+    { id:'kodak_gold',  name:'Kodak Gold 200',  short:'KG200', liveFilter:'saturate(1.1) sepia(0.18) brightness(1.05) contrast(1.05)',      grade:{rMul:1.12,gMul:1.04,bMul:0.82,rLift:14,gLift:10,bLift:8},  colorCast:null,             curve:'soft_s',  grain:28, vignetteInner:0.28,vignetteOuter:0.78,vignetteAlpha:0.60, border:false, halation:{r:255,g:80,b:20,strength:0.06},   stampColor:'#ff6600',stampShadow:'#ff3300' },
+    { id:'kodak_portra',name:'Kodak Portra 400', short:'P400',  liveFilter:'saturate(0.88) brightness(1.08) contrast(0.92) hue-rotate(5deg)', grade:{rMul:1.06,gMul:1.03,bMul:0.96,rLift:18,gLift:14,bLift:12}, colorCast:null,             curve:'flat',    grain:18, vignetteInner:0.32,vignetteOuter:0.82,vignetteAlpha:0.45, border:false, halation:{r:255,g:120,b:80,strength:0.05},  stampColor:'#ff8833',stampShadow:'#cc4400' },
+    { id:'kodak_ultra', name:'Kodak Ultramax',   short:'UMX',   liveFilter:'saturate(1.25) contrast(1.1) brightness(1.02) hue-rotate(-5deg)', grade:{rMul:1.18,gMul:1.00,bMul:0.78,rLift:10,gLift:8,bLift:14},  colorCast:null,             curve:'punchy_s',grain:32, vignetteInner:0.25,vignetteOuter:0.72,vignetteAlpha:0.65, border:false, halation:{r:255,g:60,b:10,strength:0.08},   stampColor:'#ff4400',stampShadow:'#aa2200' },
+    { id:'fuji_sup',    name:'Fuji Superia 400', short:'FSP',   liveFilter:'saturate(1.05) hue-rotate(15deg) brightness(1.03) contrast(1.05)',grade:{rMul:0.98,gMul:1.08,bMul:1.02,rLift:10,gLift:12,bLift:14}, colorCast:null,             curve:'soft_s',  grain:22, vignetteInner:0.30,vignetteOuter:0.80,vignetteAlpha:0.50, border:false, halation:{r:80,g:200,b:120,strength:0.04},  stampColor:'#00dd66',stampShadow:'#008833' },
+    { id:'fuji_vel',    name:'Fuji Velvia 50',   short:'VLV',   liveFilter:'saturate(1.5) contrast(1.18) brightness(0.97)',                   grade:{rMul:1.10,gMul:1.06,bMul:1.14,rLift:4,gLift:4,bLift:6},    colorCast:null,             curve:'punchy_s',grain:12, vignetteInner:0.22,vignetteOuter:0.70,vignetteAlpha:0.70, border:false, halation:{r:200,g:60,b:200,strength:0.04},  stampColor:'#ff33cc',stampShadow:'#990066' },
+    { id:'fuji_pro',    name:'Fuji Pro 400H',    short:'P4H',   liveFilter:'saturate(0.80) brightness(1.12) contrast(0.88) hue-rotate(10deg)',grade:{rMul:0.97,gMul:1.05,bMul:1.08,rLift:20,gLift:18,bLift:16}, colorCast:null,             curve:'flat',    grain:16, vignetteInner:0.35,vignetteOuter:0.85,vignetteAlpha:0.38, border:false, halation:{r:100,g:180,b:255,strength:0.04}, stampColor:'#44aaff',stampShadow:'#0044aa' },
+    { id:'lomo',        name:'Lomo 800',         short:'LOM',   liveFilter:'saturate(1.4) contrast(1.2) brightness(0.95)',                    grade:{rMul:1.20,gMul:0.95,bMul:1.10,rLift:6,gLift:4,bLift:8},    colorCast:null,             curve:'punchy_s',grain:48, vignetteInner:0.18,vignetteOuter:0.62,vignetteAlpha:0.80, border:false, halation:{r:255,g:30,b:180,strength:0.07},  stampColor:'#ff2288',stampShadow:'#aa0044' },
+    { id:'polaroid',    name:'Polaroid 600',     short:'POL',   liveFilter:'saturate(0.75) brightness(1.10) contrast(0.85) hue-rotate(-8deg)',grade:{rMul:1.02,gMul:1.00,bMul:1.05,rLift:24,gLift:22,bLift:20}, colorCast:null,             curve:'flat',    grain:14, vignetteInner:0.40,vignetteOuter:0.90,vignetteAlpha:0.30, border:true,  halation:{r:200,g:200,b:255,strength:0.04}, stampColor:'#aabbff',stampShadow:'#4455aa' },
+    { id:'agfa',        name:'Agfa Vista 200',   short:'AGF',   liveFilter:'saturate(1.15) hue-rotate(-10deg) brightness(1.04) contrast(1.08)',grade:{rMul:1.14,gMul:1.02,bMul:0.86,rLift:12,gLift:9,bLift:6}, colorCast:null,             curve:'soft_s',  grain:24, vignetteInner:0.27,vignetteOuter:0.75,vignetteAlpha:0.55, border:false, halation:{r:255,g:100,b:0,strength:0.06},   stampColor:'#ff9900',stampShadow:'#cc5500' },
+    { id:'ilford',      name:'Ilford HP5',       short:'B&W',   liveFilter:'grayscale(1) contrast(1.1) brightness(1.02)',                     grade:null,                                                         colorCast:null,             curve:'bw_s',    grain:38, vignetteInner:0.24,vignetteOuter:0.74,vignetteAlpha:0.68, border:false, halation:null,                              stampColor:'#ffffff',stampShadow:'#888888' },
+    { id:'fuji_cc',     name:'Classic Chrome',   short:'CLR-C', fuji:true, liveFilter:'saturate(0.65) contrast(0.9) brightness(1.0) hue-rotate(-5deg) sepia(0.12)',            grade:{rMul:0.96,gMul:1.02,bMul:1.04,rLift:10,gLift:14,bLift:12}, colorCast:{r:-8,g:18,b:-4},  curve:'flat',    grain:15, vignetteInner:0.30,vignetteOuter:0.80,vignetteAlpha:0.20, border:false, halation:{r:60,g:180,b:80,strength:0.04},   stampColor:'#66bb66',stampShadow:'#224422' },
+    { id:'fuji_cn',     name:'Classic Neg.',     short:'CLR-N', fuji:true, liveFilter:'saturate(0.78) contrast(1.0) brightness(1.03) sepia(0.22) hue-rotate(3deg)',            grade:{rMul:1.10,gMul:1.02,bMul:0.84,rLift:16,gLift:12,bLift:8},  colorCast:{r:22,g:10,b:-10}, curve:'soft_s',  grain:35, vignetteInner:0.27,vignetteOuter:0.76,vignetteAlpha:0.25, border:false, halation:{r:255,g:140,b:30,strength:0.06},  stampColor:'#ddaa44',stampShadow:'#885500' },
+    { id:'fuji_ra',     name:'Reala Ace',        short:'REALA', fuji:true, liveFilter:'saturate(0.88) contrast(0.92) brightness(1.04)',                                        grade:{rMul:1.01,gMul:1.01,bMul:1.00,rLift:12,gLift:12,bLift:12}, colorCast:null,              curve:'soft_s',  grain:10, vignetteInner:0.35,vignetteOuter:0.85,vignetteAlpha:0.10, border:false, halation:{r:220,g:200,b:180,strength:0.03}, stampColor:'#cccccc',stampShadow:'#666666' },
+    { id:'fuji_nn',     name:'Nostalgic Neg',    short:'NST-N', fuji:true, liveFilter:'saturate(0.72) contrast(0.85) brightness(1.06) sepia(0.28) hue-rotate(2deg)',           grade:{rMul:1.08,gMul:1.00,bMul:0.88,rLift:20,gLift:15,bLift:10}, colorCast:{r:18,g:8,b:-6},   curve:'flat',    grain:30, vignetteInner:0.28,vignetteOuter:0.78,vignetteAlpha:0.25, border:false, halation:{r:210,g:140,b:60,strength:0.05},  stampColor:'#cc9955',stampShadow:'#664422' },
 ];
 
-// LUT curves
 function buildLUT(type) {
-    const lut = new Uint8Array(256);
-    for (let i=0;i<256;i++) {
+    const lut=new Uint8Array(256);
+    for(let i=0;i<256;i++){
         const t=i/255; let v;
         if      (type==='flat')     v=t<0.5?2*t*t*0.4+t*0.6:(1-Math.pow(-2*t+2,2)/2)*0.4+t*0.6;
         else if (type==='soft_s')   v=t<0.5?2*t*t*0.6+t*0.4:(1-Math.pow(-2*t+2,2)/2)*0.6+t*0.4;
@@ -413,9 +369,7 @@ function buildLUT(type) {
 }
 const LUTS={};['flat','soft_s','punchy_s','bw_s'].forEach(k=>LUTS[k]=buildLUT(k));
 
-// ═══════════════════════════════════════════
-//  DOM REFS
-// ═══════════════════════════════════════════
+// ── DOM ──
 const video         = document.getElementById('webcam');
 const preview       = document.getElementById('preview');
 const captureBtn    = document.getElementById('capture-btn');
@@ -445,239 +399,110 @@ const viewerNext    = document.getElementById('viewer-next');
 const viewerSave    = document.getElementById('viewer-save');
 const viewerCounter = document.getElementById('viewer-counter');
 const gridBtn       = document.getElementById('grid-btn');
-const leakBtn       = document.getElementById('leak-btn');
-const leakCanvas    = document.getElementById('leak-overlay');
 const gridOverlay   = document.getElementById('grid-overlay');
 const timerOverlay  = document.getElementById('timer-overlay');
 const timerNumber   = document.getElementById('timer-number');
 const burstIndicator= document.getElementById('burst-indicator');
+const shutterDot    = document.getElementById('shutter-dot');
 
-// ═══════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════
-let photoCount   = 0;
-let isReviewing  = false;
-let activeStream = null;
-let facingMode   = 'environment';
-let currentZoom  = 1;
-let zoomTrack    = null;
-let photoRoll    = [];
-let viewerIdx    = 0;
-let currentFilm  = FILMS[0];
-let shootMode    = 'single'; // single | burst | timer3 | timer10
-let isShooting   = false;
-let showGrid     = false;
-let showLeak     = false;
-let leakSeed     = 0; // randomize per shot
-let currentFrame = 'none';
+// ── STATE ──
+let photoCount=0, isReviewing=false, activeStream=null;
+let facingMode='environment', currentZoom=1, zoomTrack=null;
+let photoRoll=[], viewerIdx=0, currentFilm=FILMS[0];
+let shootMode='single', isShooting=false;
+let showGrid=false;
 
-// ═══════════════════════════════════════════
-//  CAMERA INIT
-// ═══════════════════════════════════════════
+// ── CAMERA ──
 async function initCamera(facing) {
-    if (activeStream) activeStream.getTracks().forEach(t=>t.stop());
+    if(activeStream) activeStream.getTracks().forEach(t=>t.stop());
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video:{ facingMode:facing, width:{ideal:1920}, height:{ideal:1080} }, audio:false
-        });
+        const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1920},height:{ideal:1080}},audio:false});
         activeStream=stream; video.srcObject=stream;
         zoomTrack=stream.getVideoTracks()[0];
-        const caps=zoomTrack.getCapabilities?.() || {};
-        if (caps.zoom) {
-            zoomSlider.min=caps.zoom.min; zoomSlider.max=caps.zoom.max;
-            zoomSlider.step=caps.zoom.step||0.1; zoomSlider.value=caps.zoom.min;
-            currentZoom=caps.zoom.min;
-        } else { zoomTrack=null; zoomSlider.min=1; zoomSlider.max=5; zoomSlider.step=0.1; zoomSlider.value=1; currentZoom=1; }
-        updateZoomUI(currentZoom);
-        statusEl.textContent='READY TO SHOOT';
+        const caps=zoomTrack.getCapabilities?.()??{};
+        if(caps.zoom){ zoomSlider.min=caps.zoom.min; zoomSlider.max=caps.zoom.max; zoomSlider.step=caps.zoom.step??0.1; zoomSlider.value=caps.zoom.min; currentZoom=caps.zoom.min; }
+        else { zoomTrack=null; zoomSlider.min=1; zoomSlider.max=5; zoomSlider.step=0.1; zoomSlider.value=1; currentZoom=1; }
+        updateZoomUI(currentZoom); statusEl.textContent='READY TO SHOOT';
     } catch {
-        try {
-            const s=await navigator.mediaDevices.getUserMedia({ video:{width:{ideal:1920},height:{ideal:1080}}, audio:false });
-            activeStream=s; video.srcObject=s; zoomTrack=null;
-            statusEl.textContent='READY (FALLBACK)';
-        } catch { statusEl.textContent='CAMERA ERROR'; alert('Vui lòng cấp quyền camera!'); }
+        try { const s=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1920},height:{ideal:1080}},audio:false}); activeStream=s; video.srcObject=s; zoomTrack=null; statusEl.textContent='READY'; }
+        catch { statusEl.textContent='CAMERA ERROR'; alert('Vui lòng cấp quyền camera!'); }
     }
 }
 
-// ═══════════════════════════════════════════
-//  ZOOM
-// ═══════════════════════════════════════════
+// ── ZOOM ──
 function updateZoomUI(z) {
     zoomLabel.textContent=z.toFixed(1)+'×';
-    const min=parseFloat(zoomSlider.min), max=parseFloat(zoomSlider.max);
+    const min=parseFloat(zoomSlider.min),max=parseFloat(zoomSlider.max);
     zoomSlider.style.setProperty('--pct',((z-min)/(max-min)*100)+'%');
     zoomSlider.value=z;
 }
 async function setZoom(z) {
-    const min=parseFloat(zoomSlider.min), max=parseFloat(zoomSlider.max);
+    const min=parseFloat(zoomSlider.min),max=parseFloat(zoomSlider.max);
     z=Math.max(min,Math.min(max,z)); currentZoom=z; updateZoomUI(z);
-    if (zoomTrack) { try{ await zoomTrack.applyConstraints({advanced:[{zoom:z}]}); }catch{} }
-    else { video.style.transform=facingMode==='user'?`scaleX(-1) scale(${z})`:`scale(${z})`; }
+    if(zoomTrack){ try{await zoomTrack.applyConstraints({advanced:[{zoom:z}]});}catch{} }
+    else{ video.style.transform=facingMode==='user'?`scaleX(-1) scale(${z})`:`scale(${z})`; }
 }
 zoomSlider.addEventListener('input',()=>setZoom(parseFloat(zoomSlider.value)));
-zoomIn.addEventListener('click', ()=>setZoom(currentZoom+0.5));
+zoomIn.addEventListener('click',()=>setZoom(currentZoom+0.5));
 zoomOut.addEventListener('click',()=>setZoom(currentZoom-0.5));
-
-// Pinch to zoom
-let pinchDist0=0, pinchZoom0=1;
+let pd=0,pz=1;
 const vf=document.getElementById('viewfinder');
-vf.addEventListener('touchstart',e=>{ if(e.touches.length===2){ pinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); pinchZoom0=currentZoom; } },{passive:true});
-vf.addEventListener('touchmove',e=>{ if(e.touches.length===2){ const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); setZoom(pinchZoom0*(d/pinchDist0)); } },{passive:true});
+vf.addEventListener('touchstart',e=>{if(e.touches.length===2){pd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);pz=currentZoom;}},{passive:true});
+vf.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);setZoom(pz*(d/pd));}},{passive:true});
 
-// ═══════════════════════════════════════════
-//  FLIP
-// ═══════════════════════════════════════════
+// ── FLIP ──
+
+// ── GRID ──
+gridBtn.addEventListener('click',()=>{
+    showGrid=!showGrid;
+    gridOverlay.classList.toggle('show',showGrid);
+    gridBtn.classList.toggle('active',showGrid);
+    statusEl.textContent=showGrid?'GRID ON':'GRID OFF';
+});
 flipBtn.addEventListener('click',()=>{
     facingMode=facingMode==='environment'?'user':'environment';
     initCamera(facingMode);
     video.classList.toggle('mirrored',facingMode==='user');
 });
 
-// ═══════════════════════════════════════════
-//  GRID
-// ═══════════════════════════════════════════
-gridBtn.addEventListener('click',()=>{
-    showGrid=!showGrid;
-    gridOverlay.classList.toggle('show',showGrid);
-    gridBtn.classList.toggle('active-toggle',showGrid);
-});
-
-// ═══════════════════════════════════════════
-//  LIGHT LEAK ENGINE
-// ═══════════════════════════════════════════
-
-// 8 kiểu leak khác nhau, random mỗi lần chụp
-const LEAK_TYPES = [
-    // [corner: tl/tr/bl/br/left/right/top/bot, color_r, color_g, color_b, radius_x_ratio, radius_y_ratio, alpha]
-    { corner:'tl',    r:255, g:80,  b:20,  rx:0.7, ry:0.5, a:0.55 }, // Orange top-left
-    { corner:'tr',    r:255, g:140, b:0,   rx:0.6, ry:0.6, a:0.50 }, // Yellow top-right
-    { corner:'bl',    r:200, g:30,  b:80,  rx:0.5, ry:0.7, a:0.48 }, // Red-pink bottom-left
-    { corner:'br',    r:255, g:60,  b:0,   rx:0.65,ry:0.5, a:0.52 }, // Deep orange bottom-right
-    { corner:'left',  r:255, g:100, b:30,  rx:0.5, ry:0.8, a:0.45 }, // Orange left streak
-    { corner:'right', r:220, g:50,  b:10,  rx:0.5, ry:0.9, a:0.42 }, // Red right streak
-    { corner:'top',   r:255, g:160, b:40,  rx:0.9, ry:0.4, a:0.40 }, // Warm top streak
-    { corner:'tl',    r:180, g:20,  b:80,  rx:0.8, ry:0.6, a:0.50 }, // Magenta top-left
-];
-
-function getLeakOrigin(corner, w, h) {
-    switch(corner) {
-        case 'tl':    return { x: 0,   y: 0   };
-        case 'tr':    return { x: w,   y: 0   };
-        case 'bl':    return { x: 0,   y: h   };
-        case 'br':    return { x: w,   y: h   };
-        case 'left':  return { x: 0,   y: h/2 };
-        case 'right': return { x: w,   y: h/2 };
-        case 'top':   return { x: w/2, y: 0   };
-        case 'bot':   return { x: w/2, y: h   };
-        default:      return { x: 0,   y: 0   };
-    }
-}
-
-// Draw ONE leak onto a canvas context
-function drawLeakOnCtx(c, w, h, leak) {
-    const origin = getLeakOrigin(leak.corner, w, h);
-    const rx = w * leak.rx, ry = h * leak.ry;
-    // Elliptical gradient simulating lens flare / light bleed
-    const grd = c.createRadialGradient(origin.x, origin.y, 0, origin.x, origin.y, Math.max(rx, ry));
-    grd.addColorStop(0,   `rgba(${leak.r},${leak.g},${leak.b},${leak.a})`);
-    grd.addColorStop(0.4, `rgba(${leak.r},${leak.g},${leak.b},${(leak.a*0.5).toFixed(2)})`);
-    grd.addColorStop(1,   `rgba(${leak.r},${leak.g},${leak.b},0)`);
-    c.save();
-    // Squish into ellipse by scaling
-    c.translate(origin.x, origin.y);
-    c.scale(leak.rx / Math.max(leak.rx, leak.ry), leak.ry / Math.max(leak.rx, leak.ry));
-    c.translate(-origin.x, -origin.y);
-    c.globalCompositeOperation = 'screen';
-    c.fillStyle = grd;
-    c.fillRect(0, 0, w, h);
-    c.restore();
-    c.globalCompositeOperation = 'source-over';
-}
-
-// Refresh the LIVE preview overlay on the viewfinder
-function renderLeakPreview() {
-    if (!showLeak) { leakCanvas.classList.remove('show'); return; }
-    const vf = document.getElementById('viewfinder');
-    leakCanvas.width  = vf.offsetWidth;
-    leakCanvas.height = vf.offsetHeight;
-    const lc = leakCanvas.getContext('2d');
-    lc.clearRect(0, 0, leakCanvas.width, leakCanvas.height);
-    const leak = LEAK_TYPES[leakSeed % LEAK_TYPES.length];
-    drawLeakOnCtx(lc, leakCanvas.width, leakCanvas.height, leak);
-    leakCanvas.classList.add('show');
-}
-
-// Apply leak onto the high-res capture canvas (ctx = global processing canvas context)
-function applyLeakToCapture(w, h) {
-    if (!showLeak) return;
-    const leak = LEAK_TYPES[leakSeed % LEAK_TYPES.length];
-    drawLeakOnCtx(ctx, w, h, leak);
-}
-
-// Toggle button
-leakBtn.addEventListener('click', () => {
-    showLeak = !showLeak;
-    // Each time user enables, pick a new random leak style
-    if (showLeak) leakSeed = Math.floor(Math.random() * LEAK_TYPES.length);
-    leakBtn.classList.toggle('active-toggle', showLeak);
-    renderLeakPreview();
-    statusEl.textContent = showLeak
-        ? 'LIGHT LEAK ON — ' + ['ORANGE','YELLOW','RED-PINK','DEEP ORANGE','LEFT STREAK','RIGHT STREAK','WARM TOP','MAGENTA'][leakSeed % 8]
-        : 'LIGHT LEAK OFF';
-});
-
-// Re-render preview on resize (orientation change)
-window.addEventListener('resize', () => { if(showLeak) renderLeakPreview(); });
-
-// ═══════════════════════════════════════════
-//  MODE SELECTOR
-// ═══════════════════════════════════════════
+// ── MODE ──
 document.querySelectorAll('.mode-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
         document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        shootMode=btn.dataset.mode;
-        // Update shutter icon
-        if (shootMode==='burst') captureBtn.textContent='⚡';
-        else if (shootMode.startsWith('timer')) captureBtn.textContent='⏱';
-        else captureBtn.textContent='📸';
-        statusEl.textContent=btn.textContent.trim().toUpperCase()+' MODE';
+        btn.classList.add('active'); shootMode=btn.dataset.mode;
+        // Shutter dot color per mode
+        if(shootMode==='burst') shutterDot.style.background='radial-gradient(circle at 38% 35%,#ffcc44,#ff8800)';
+        else if(shootMode.startsWith('timer')) shutterDot.style.background='radial-gradient(circle at 38% 35%,#44aaff,#0066cc)';
+        else shutterDot.style.background='radial-gradient(circle at 38% 35%,#ff6655,#cc1100)';
+        statusEl.textContent=btn.textContent.trim().toUpperCase();
     });
 });
 
-// ═══════════════════════════════════════════
-//  FILTER STRIP
-// ═══════════════════════════════════════════
-function drawSampleToCanvas(c) {
+// ── FILTER STRIP ──
+function drawSample(c) {
     const cx=c.getContext('2d'),w=c.width,h=c.height;
-    const grd=cx.createLinearGradient(0,0,w,h);
-    grd.addColorStop(0,'#c87941'); grd.addColorStop(0.3,'#8db36a');
-    grd.addColorStop(0.6,'#4a7ba8'); grd.addColorStop(1,'#2a3a5a');
-    cx.fillStyle=grd; cx.fillRect(0,0,w,h);
-    cx.fillStyle='rgba(255,220,160,0.6)';
-    cx.beginPath(); cx.ellipse(w*0.55,h*0.45,w*0.18,h*0.25,0,0,Math.PI*2); cx.fill();
+    const g=cx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0,'#c87941');g.addColorStop(0.3,'#8db36a');g.addColorStop(0.6,'#4a7ba8');g.addColorStop(1,'#2a3a5a');
+    cx.fillStyle=g;cx.fillRect(0,0,w,h);
+    cx.fillStyle='rgba(255,220,160,0.6)';cx.beginPath();cx.ellipse(w*.55,h*.45,w*.18,h*.25,0,0,Math.PI*2);cx.fill();
 }
 FILMS.forEach((film,idx)=>{
-    if (film.fuji && (idx===0||!FILMS[idx-1].fuji)) {
-        const div=document.createElement('div');
-        div.style.cssText='flex-shrink:0;display:flex;align-items:center;padding:0 2px;';
-        div.innerHTML='<span style="font-size:9px;color:#4a9eff;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg)">FUJI</span>';
-        filterStrip.appendChild(div);
+    if(film.fuji&&(idx===0||!FILMS[idx-1].fuji)){
+        const d=document.createElement('div');
+        d.style.cssText='flex-shrink:0;display:flex;align-items:center;padding:0 2px;';
+        d.innerHTML='<span style="font-size:9px;color:#4a9eff;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg)">FUJI</span>';
+        filterStrip.appendChild(d);
     }
-    const btn=document.createElement('div');
-    btn.className='filter-btn'+(idx===0?' active':'');
-    const thumb=document.createElement('div'); thumb.className='filter-thumb';
-    const tc=document.createElement('canvas'); tc.width=40; tc.height=40;
-    drawSampleToCanvas(tc); tc.style.filter=film.liveFilter;
-    thumb.appendChild(tc);
-    const lbl=document.createElement('div'); lbl.className='filter-label';
-    lbl.innerHTML=film.fuji?`<span style="color:#4a9eff">${film.short}</span>`:film.short;
-    btn.appendChild(thumb); btn.appendChild(lbl);
-    filterStrip.appendChild(btn);
+    const btn=document.createElement('div'); btn.className='filter-btn'+(idx===0?' active':'');
+    const th=document.createElement('div'); th.className='filter-thumb';
+    const tc=document.createElement('canvas'); tc.width=40;tc.height=40;
+    drawSample(tc); tc.style.filter=film.liveFilter; th.appendChild(tc);
+    const lb=document.createElement('div'); lb.className='filter-label';
+    lb.innerHTML=film.fuji?`<span style="color:#4a9eff">${film.short}</span>`:film.short;
+    btn.appendChild(th); btn.appendChild(lb); filterStrip.appendChild(btn);
     btn.addEventListener('click',()=>{
         document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilm=FILMS[idx];
+        btn.classList.add('active'); currentFilm=FILMS[idx];
         filmNameEl.textContent=film.fuji?`📷 ${film.name}`:film.name;
         video.style.filter=film.liveFilter;
         statusEl.textContent=film.name.toUpperCase();
@@ -685,243 +510,196 @@ FILMS.forEach((film,idx)=>{
 });
 video.style.filter=FILMS[0].liveFilter;
 
-// ═══════════════════════════════════════════
-//  IMAGE PROCESSING PIPELINE
-// ═══════════════════════════════════════════
-function applyGrade(data,film) {
-    const {rMul,gMul,bMul,rLift,gLift,bLift}=film.grade;
-    const cc=film.colorCast||null;
-    const ccR=cc?cc.r:0, ccG=cc?cc.g:0, ccB=cc?cc.b:0;
+// ── IMAGE PIPELINE ──
+function applyGrade(data,film){
+    const{rMul,gMul,bMul,rLift,gLift,bLift}=film.grade;
+    const cc=film.colorCast??null,ccR=cc?.r??0,ccG=cc?.g??0,ccB=cc?.b??0;
     for(let i=0;i<data.length;i+=4){
-        data[i]  =Math.min(255,Math.max(0,data[i]  *rMul*0.92+rLift+ccR));
-        data[i+1]=Math.min(255,Math.max(0,data[i+1]*gMul*0.92+gLift+ccG));
-        data[i+2]=Math.min(255,Math.max(0,data[i+2]*bMul*0.92+bLift+ccB));
+        data[i]  =Math.min(255,Math.max(0,data[i]  *rMul*.92+rLift+ccR));
+        data[i+1]=Math.min(255,Math.max(0,data[i+1]*gMul*.92+gLift+ccG));
+        data[i+2]=Math.min(255,Math.max(0,data[i+2]*bMul*.92+bLift+ccB));
     }
 }
-function applyBW(data){ for(let i=0;i<data.length;i+=4){const l=data[i]*0.299+data[i+1]*0.587+data[i+2]*0.114;data[i]=data[i+1]=data[i+2]=l;} }
-function applyCurve(data,lut){ for(let i=0;i<data.length;i+=4){data[i]=lut[data[i]];data[i+1]=lut[data[i+1]];data[i+2]=lut[data[i+2]];} }
-function applyGrain(data,g){ for(let i=0;i<data.length;i+=4){const n=(Math.random()-0.5)*g;data[i]=Math.min(255,Math.max(0,data[i]+n));data[i+1]=Math.min(255,Math.max(0,data[i+1]+n));data[i+2]=Math.min(255,Math.max(0,data[i+2]+n));} }
+function applyBW(data){for(let i=0;i<data.length;i+=4){const l=data[i]*.299+data[i+1]*.587+data[i+2]*.114;data[i]=data[i+1]=data[i+2]=l;}}
+function applyCurve(data,lut){for(let i=0;i<data.length;i+=4){data[i]=lut[data[i]];data[i+1]=lut[data[i+1]];data[i+2]=lut[data[i+2]];}}
+function applyGrain(data,g){for(let i=0;i<data.length;i+=4){const n=(Math.random()-.5)*g;data[i]=Math.min(255,Math.max(0,data[i]+n));data[i+1]=Math.min(255,Math.max(0,data[i+1]+n));data[i+2]=Math.min(255,Math.max(0,data[i+2]+n));}}
 function applyHalation(w,h,hal){
     if(!hal)return;
-    const hx=ctx.createRadialGradient(w*0.5,h*0.2,0,w*0.5,h*0.2,w*0.6);
+    const hx=ctx.createRadialGradient(w*.5,h*.2,0,w*.5,h*.2,w*.6);
     hx.addColorStop(0,`rgba(${hal.r},${hal.g},${hal.b},${hal.strength})`);
     hx.addColorStop(1,`rgba(${hal.r},${hal.g},${hal.b},0)`);
-    ctx.globalCompositeOperation='screen'; ctx.fillStyle=hx; ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation='screen';ctx.fillStyle=hx;ctx.fillRect(0,0,w,h);
     ctx.globalCompositeOperation='source-over';
 }
 function applyVignette(w,h,film){
     const vg=ctx.createRadialGradient(w/2,h/2,w*film.vignetteInner,w/2,h/2,w*film.vignetteOuter);
-    vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,`rgba(0,0,0,${film.vignetteAlpha})`);
-    ctx.fillStyle=vg; ctx.fillRect(0,0,w,h);
+    vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,`rgba(0,0,0,${film.vignetteAlpha})`);
+    ctx.fillStyle=vg;ctx.fillRect(0,0,w,h);
 }
 function applyPolaroidBorder(w,h){
-    const t=Math.floor(w*0.05),bot=Math.floor(w*0.18);
+    const t=Math.floor(w*.05),bot=Math.floor(w*.18);
     ctx.fillStyle='#f5f0e8';
-    ctx.fillRect(0,0,w,t); ctx.fillRect(0,0,t,h); ctx.fillRect(w-t,0,t,h); ctx.fillRect(0,h-bot,w,bot);
+    ctx.fillRect(0,0,w,t);ctx.fillRect(0,0,t,h);ctx.fillRect(w-t,0,t,h);ctx.fillRect(0,h-bot,w,bot);
 }
 function drawDateStamp(w,h,film){
     const now=new Date();
-    const stamp=`'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
-    const fs=Math.floor(w*0.042);
+    const s=`'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
+    const fs=Math.floor(w*.042);
     ctx.font=`bold ${fs}px "Courier New",monospace`;
-    ctx.fillStyle=film.stampColor; ctx.shadowColor=film.stampShadow; ctx.shadowBlur=fs*0.3;
-    const tw=ctx.measureText(stamp).width;
-    ctx.fillText(stamp,w-tw-w*0.04,film.border?h-w*0.18-h*0.02:h-h*0.04);
+    ctx.fillStyle=film.stampColor;ctx.shadowColor=film.stampShadow;ctx.shadowBlur=fs*.3;
+    const tw=ctx.measureText(s).width;
+    ctx.fillText(s,w-tw-w*.04,film.border?h-w*.18-h*.02:h-h*.04);
     ctx.shadowBlur=0;
 }
 
-// ═══════════════════════════════════════════
-//  CAPTURE ONE FRAME → returns Promise<{blob,url}>
-// ═══════════════════════════════════════════
-function captureFrame(film) {
+// ── CAPTURE FRAME ──
+function captureFrame(film){
     return new Promise(resolve=>{
-        canvas.width=video.videoWidth||1280; canvas.height=video.videoHeight||720;
+        canvas.width=video.videoWidth||1280;canvas.height=video.videoHeight||720;
         ctx.filter='none';
-        if (facingMode==='user'){ ctx.save();ctx.translate(canvas.width,0);ctx.scale(-1,1);ctx.drawImage(video,0,0,canvas.width,canvas.height);ctx.restore(); }
-        else { ctx.drawImage(video,0,0,canvas.width,canvas.height); }
-        const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
-        const data=imageData.data;
-        if (film.id==='ilford') applyBW(data); else applyGrade(data,film);
-        applyCurve(data,LUTS[film.curve]); applyGrain(data,film.grain);
-        ctx.putImageData(imageData,0,0);
+        if(facingMode==='user'){ctx.save();ctx.translate(canvas.width,0);ctx.scale(-1,1);ctx.drawImage(video,0,0,canvas.width,canvas.height);ctx.restore();}
+        else ctx.drawImage(video,0,0,canvas.width,canvas.height);
+        const id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data;
+        if(film.id==='ilford') applyBW(d); else applyGrade(d,film);
+        applyCurve(d,LUTS[film.curve]); applyGrain(d,film.grain);
+        ctx.putImageData(id,0,0);
         applyHalation(canvas.width,canvas.height,film.halation);
         applyVignette(canvas.width,canvas.height,film);
-        applyLeakToCapture(canvas.width,canvas.height);
-        if (film.border) applyPolaroidBorder(canvas.width,canvas.height);
+        if(film.border) applyPolaroidBorder(canvas.width,canvas.height);
         drawDateStamp(canvas.width,canvas.height,film);
-        canvas.toBlob(blob=>resolve({blob, url:URL.createObjectURL(blob)}),'image/jpeg',0.93);
+        canvas.toBlob(blob=>resolve({blob,url:URL.createObjectURL(blob)}),'image/jpeg',.93);
     });
 }
 
-// ═══════════════════════════════════════════
-//  FLASH
-// ═══════════════════════════════════════════
+// ── FLASH ──
 function triggerFlash(){
-    flashOverlay.style.transition='opacity 0.04s ease-in'; flashOverlay.style.opacity='0.9';
-    setTimeout(()=>{ flashOverlay.style.transition='opacity 0.4s ease-out'; flashOverlay.style.opacity='0'; },70);
+    flashOverlay.style.transition='opacity 0.04s ease-in';flashOverlay.style.opacity='.9';
+    setTimeout(()=>{flashOverlay.style.transition='opacity 0.4s ease-out';flashOverlay.style.opacity='0';},70);
 }
 
-// ═══════════════════════════════════════════
-//  SAVE
-// ═══════════════════════════════════════════
-async function savePhoto(blob,filename) {
+// ── SAVE ──
+async function savePhoto(blob,filename){
     const file=new File([blob],filename,{type:'image/jpeg'});
     if(navigator.share&&navigator.canShare?.({files:[file]})){
-        try{ await navigator.share({files:[file],title:'Retro Photo'}); return; }catch(e){ if(e.name==='AbortError') return; }
+        try{await navigator.share({files:[file],title:'Retro Photo'});return;}catch(e){if(e.name==='AbortError')return;}
     }
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download=filename;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    const a=document.createElement('a');a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-// ═══════════════════════════════════════════
-//  GALLERY
-// ═══════════════════════════════════════════
-function addToGallery(url,blob,filename,filmName,burstLabel) {
+// ── GALLERY ──
+function addToGallery(url,blob,filename,filmName,burstLabel){
     photoRoll.push({url,blob,filename,filmName});
     const n=photoRoll.length;
-    galleryBadge.textContent=n; galleryBadge.style.display='flex';
-    const thumb=document.createElement('div'); thumb.className='gallery-thumb'; thumb.dataset.idx=n-1;
-    const img=document.createElement('img'); img.src=url; img.loading='lazy';
-    const idxLbl=document.createElement('span'); idxLbl.className='thumb-idx'; idxLbl.textContent=n;
-    thumb.appendChild(img); thumb.appendChild(idxLbl);
-    if (burstLabel) {
-        const bl=document.createElement('span'); bl.className='burst-badge'; bl.textContent=burstLabel;
-        thumb.appendChild(bl);
-    }
-    thumb.addEventListener('click',()=>openViewer(parseInt(thumb.dataset.idx)));
-    galleryGrid.insertBefore(thumb,galleryGrid.firstChild);
+    galleryBadge.textContent=n;galleryBadge.style.display='flex';
+    const th=document.createElement('div');th.className='gallery-thumb';th.dataset.idx=n-1;
+    const img=document.createElement('img');img.src=url;img.loading='lazy';
+    const il=document.createElement('span');il.className='thumb-idx';il.textContent=n;
+    th.appendChild(img);th.appendChild(il);
+    if(burstLabel){const bl=document.createElement('span');bl.className='burst-badge';bl.textContent=burstLabel;th.appendChild(bl);}
+    th.addEventListener('click',()=>openViewer(parseInt(th.dataset.idx)));
+    galleryGrid.insertBefore(th,galleryGrid.firstChild);
     galleryCount.textContent=n+' SHOTS';
 }
-
-galleryBtn.addEventListener('click',()=>{ if(photoRoll.length===0){statusEl.textContent='NO PHOTOS YET';return;} galleryOverlay.classList.add('open'); });
+galleryBtn.addEventListener('click',()=>{if(photoRoll.length===0){statusEl.textContent='NO PHOTOS YET';return;}galleryOverlay.classList.add('open');});
 galleryClose.addEventListener('click',()=>galleryOverlay.classList.remove('open'));
 
-// ═══════════════════════════════════════════
-//  VIEWER
-// ═══════════════════════════════════════════
-function openViewer(idx){ viewerIdx=idx; renderViewer(); galleryOverlay.classList.remove('open'); photoViewer.classList.add('open'); }
+// ── VIEWER ──
+function openViewer(idx){viewerIdx=idx;renderViewer();galleryOverlay.classList.remove('open');photoViewer.classList.add('open');}
 function renderViewer(){
     const p=photoRoll[viewerIdx];
     viewerImg.src=p.url;
     viewerCounter.textContent=`${viewerIdx+1} / ${photoRoll.length}  [${p.filmName}]`;
-    viewerPrev.style.opacity=viewerIdx>0?'1':'0.3';
-    viewerNext.style.opacity=viewerIdx<photoRoll.length-1?'1':'0.3';
+    viewerPrev.style.opacity=viewerIdx>0?'1':'.3';
+    viewerNext.style.opacity=viewerIdx<photoRoll.length-1?'1':'.3';
 }
-viewerBack.addEventListener('click',()=>{ photoViewer.classList.remove('open'); galleryOverlay.classList.add('open'); });
-viewerPrev.addEventListener('click',()=>{ if(viewerIdx>0){ viewerIdx--; renderViewer(); } });
-viewerNext.addEventListener('click',()=>{ if(viewerIdx<photoRoll.length-1){ viewerIdx++; renderViewer(); } });
-viewerSave.addEventListener('click',()=>{ const p=photoRoll[viewerIdx]; savePhoto(p.blob,p.filename); });
-let swipeX=0;
-viewerImg.addEventListener('touchstart',e=>{swipeX=e.touches[0].clientX;},{passive:true});
-viewerImg.addEventListener('touchend',e=>{ const dx=e.changedTouches[0].clientX-swipeX; if(Math.abs(dx)>50){ if(dx<0&&viewerIdx<photoRoll.length-1){viewerIdx++;renderViewer();} if(dx>0&&viewerIdx>0){viewerIdx--;renderViewer();} } });
+viewerBack.addEventListener('click',()=>{photoViewer.classList.remove('open');galleryOverlay.classList.add('open');});
+viewerPrev.addEventListener('click',()=>{if(viewerIdx>0){viewerIdx--;renderViewer();}});
+viewerNext.addEventListener('click',()=>{if(viewerIdx<photoRoll.length-1){viewerIdx++;renderViewer();}});
+viewerSave.addEventListener('click',()=>{const p=photoRoll[viewerIdx];savePhoto(p.blob,p.filename);});
+let sx=0;
+viewerImg.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});
+viewerImg.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50){if(dx<0&&viewerIdx<photoRoll.length-1){viewerIdx++;renderViewer();}if(dx>0&&viewerIdx>0){viewerIdx--;renderViewer();}}});
 
-// ═══════════════════════════════════════════
-//  TIMER countdown helper
-// ═══════════════════════════════════════════
-function runTimer(seconds) {
+// ── TIMER ──
+function runTimer(s){
     return new Promise(resolve=>{
-        timerOverlay.classList.add('show');
-        timerNumber.textContent=seconds;
-        let count=seconds;
-        const iv=setInterval(()=>{
-            count--;
-            if(count<=0){ clearInterval(iv); timerOverlay.classList.remove('show'); resolve(); }
-            else { timerNumber.textContent=count; }
-        },1000);
+        timerOverlay.classList.add('show');timerNumber.textContent=s;
+        let c=s;
+        const iv=setInterval(()=>{c--;if(c<=0){clearInterval(iv);timerOverlay.classList.remove('show');resolve();}else timerNumber.textContent=c;},1000);
     });
 }
 
-// ═══════════════════════════════════════════
-//  BURST shoot helper
-// ═══════════════════════════════════════════
-async function shootBurst(film) {
-    const BURST_COUNT=3, BURST_DELAY=600;
+// ── BURST ──
+async function shootBurst(film){
     burstIndicator.classList.add('show');
     [0,1,2].forEach(i=>document.getElementById('bd'+i).classList.remove('taken'));
-    const results=[];
-    for(let i=0;i<BURST_COUNT;i++){
-    if(showLeak){ leakSeed=Math.floor(Math.random()*LEAK_TYPES.length); renderLeakPreview(); }
-        triggerFlash();
-        const {blob,url}=await captureFrame(film);
+    const res=[];
+    for(let i=0;i<3;i++){
+        triggerFlash();const{blob,url}=await captureFrame(film);
         document.getElementById('bd'+i).classList.add('taken');
-        results.push({blob,url});
-        if(i<BURST_COUNT-1) await new Promise(r=>setTimeout(r,BURST_DELAY));
+        res.push({blob,url});
+        if(i<2)await new Promise(r=>setTimeout(r,600));
     }
-    burstIndicator.classList.remove('show');
-    return results;
+    burstIndicator.classList.remove('show');return res;
 }
 
-// ═══════════════════════════════════════════
-//  SHUTTER (main)
-// ═══════════════════════════════════════════
-captureBtn.addEventListener('click', async function() {
-    if (isReviewing) {
-        preview.style.display='none'; isReviewing=false;
+// ── SHUTTER ──
+captureBtn.addEventListener('click',async function(){
+    if(isReviewing){
+        preview.style.display='none';isReviewing=false;
         statusEl.textContent='READY TO SHOOT';
-        captureBtn.textContent= shootMode==='burst'?'⚡': shootMode.startsWith('timer')?'⏱':'📸';
+        shutterDot.style.background= shootMode==='burst'?'radial-gradient(circle at 38% 35%,#ffcc44,#ff8800)':shootMode.startsWith('timer')?'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)':'radial-gradient(circle at 38% 35%,#ff6655,#cc1100)';
         return;
     }
-    if (isShooting) return;
-    isShooting=true; captureBtn.disabled=true;
-
+    if(isShooting)return;
+    isShooting=true;captureBtn.disabled=true;
     const film=currentFilm;
 
-    // ── TIMER MODE ──
-    if (shootMode==='timer3' || shootMode==='timer10') {
+    if(shootMode==='timer3'||shootMode==='timer10'){
         const secs=shootMode==='timer3'?3:10;
         statusEl.textContent=`TIMER ${secs}s...`;
-        await runTimer(secs);
-    if(showLeak){ leakSeed=Math.floor(Math.random()*LEAK_TYPES.length); renderLeakPreview(); }
-        triggerFlash();
-        statusEl.textContent='DEVELOPING FILM...';
-        const {blob,url}=await captureFrame(film);
-        const filename=`${film.short}_${Date.now()}.jpg`;
-        preview.src=url; preview.style.display='block'; isReviewing=true;
-        photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
+        await runTimer(secs);triggerFlash();statusEl.textContent='DEVELOPING...';
+        const{blob,url}=await captureFrame(film);const filename=`${film.short}_${Date.now()}.jpg`;
+        preview.src=url;preview.style.display='block';isReviewing=true;
+        photoCount++;counterEl.textContent=String(photoCount).padStart(2,'0');
         addToGallery(url,blob,filename,film.name,'');
-        statusEl.textContent='✓ TIMER SHOT SAVED';
-        captureBtn.textContent='🔄'; captureBtn.disabled=false; isShooting=false;
-        await savePhoto(blob,filename);
-        return;
+        statusEl.textContent='✓ SAVED';captureBtn.textContent='';
+        captureBtn.innerHTML='<div class="shutter-dot" id="shutter-dot" style="background:radial-gradient(circle at 38% 35%,#44aaff,#0066cc)"></div>';
+        captureBtn.disabled=false;isShooting=false;
+        await savePhoto(blob,filename);return;
     }
 
-    // ── BURST MODE ──
-    if (shootMode==='burst') {
-        statusEl.textContent='BURST SHOOTING...';
+    if(shootMode==='burst'){
+        statusEl.textContent='BURST...';
         const results=await shootBurst(film);
-        // Show last frame as preview
         const last=results[results.length-1];
-        preview.src=last.url; preview.style.display='block'; isReviewing=true;
+        preview.src=last.url;preview.style.display='block';isReviewing=true;
         for(let i=0;i<results.length;i++){
-            const {blob,url}=results[i];
-            const filename=`${film.short}_BURST${i+1}_${Date.now()}.jpg`;
-            photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
-            addToGallery(url,blob,filename,film.name,`${i+1}/3`);
-            savePhoto(blob,filename);
+            const{blob,url}=results[i];const filename=`${film.short}_BURST${i+1}_${Date.now()}.jpg`;
+            photoCount++;counterEl.textContent=String(photoCount).padStart(2,'0');
+            addToGallery(url,blob,filename,film.name,`${i+1}/3`);savePhoto(blob,filename);
         }
-        statusEl.textContent=`✓ BURST ×3 SAVED`;
-        captureBtn.textContent='🔄'; captureBtn.disabled=false; isShooting=false;
-        return;
+        statusEl.textContent='✓ BURST ×3 SAVED';
+        captureBtn.innerHTML='<div class="shutter-dot" id="shutter-dot" style="background:radial-gradient(circle at 38% 35%,#ffcc44,#ff8800)"></div>';
+        captureBtn.disabled=false;isShooting=false;return;
     }
 
-    // ── SINGLE MODE ──
-    statusEl.textContent='DEVELOPING FILM...';
-    if(showLeak){ leakSeed=Math.floor(Math.random()*LEAK_TYPES.length); renderLeakPreview(); }
-    triggerFlash();
+    // SINGLE
+    statusEl.textContent='DEVELOPING...';triggerFlash();
     await new Promise(r=>setTimeout(r,60));
-    const {blob,url}=await captureFrame(film);
-    const filename=`${film.short}_${Date.now()}.jpg`;
-    preview.src=url; preview.style.display='block'; isReviewing=true;
-    photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
+    const{blob,url}=await captureFrame(film);const filename=`${film.short}_${Date.now()}.jpg`;
+    preview.src=url;preview.style.display='block';isReviewing=true;
+    photoCount++;counterEl.textContent=String(photoCount).padStart(2,'0');
     addToGallery(url,blob,filename,film.name,'');
-    statusEl.textContent='✓ TAP TO SHOOT AGAIN  |  🖼️ VIEW ROLL';
-    captureBtn.textContent='🔄'; captureBtn.disabled=false; isShooting=false;
+    statusEl.textContent='✓ TAP TO CONTINUE';
+    captureBtn.disabled=false;isShooting=false;
     await savePhoto(blob,filename);
 });
 
-window.addEventListener('beforeunload',()=>{ if(activeStream) activeStream.getTracks().forEach(t=>t.stop()); });
+window.addEventListener('beforeunload',()=>{if(activeStream)activeStream.getTracks().forEach(t=>t.stop());});
 window.addEventListener('load',()=>initCamera(facingMode));
 </script>
 </body>
