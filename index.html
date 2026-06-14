@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Retro Camera Premium v2.1</title>
+    <title>Retro Camera Premium v2.1.3</title>
     <style>
         /* ── CSS RESET & HYBRID WEBVIEW OPTIMIZATIONS ── */
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -64,13 +64,20 @@
         #timer-number { font-size:108px; font-weight:bold; color:#fff; text-shadow:0 0 40px rgba(255,170,0,1); animation:pulse 1s ease-in-out infinite; }
         @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
 
-        /* ── BỘ ĐIỀU KHIỂN KÉP (ZOOM + TƯƠNG PHẢN) ── */
-        .sliders-wrapper { display: flex; flex-direction: column; gap: 10px; padding: 2px 6px; flex-shrink: 0;}
-        .slider-row { display: flex; align-items: center; gap: 8px; }
-        .slider-icon { width: 14px; height: 14px; color: #888; flex-shrink: 0; filter: drop-shadow(0 -1px 0 rgba(0,0,0,0.8));}
-        .slider-input { flex: 1; -webkit-appearance: none; appearance: none; height: 3px; border-radius: 2px; outline: none; background: linear-gradient(to right, #ffaa00 var(--pct,0%), #2a2a2a var(--pct,0%)); box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); }
-        .slider-input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffd000, #ff8800); border: 2px solid #fff; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
-        .slider-val { font-size: 10px; color: #777; width: 32px; text-align: right; font-weight: bold; letter-spacing: 0.5px; }
+        /* ── BỘ ĐIỀU KHIỂN KÉP NÂNG CẤP UI (ZOOM + TƯƠNG PHẢN) ── */
+        .sliders-wrapper { display: flex; flex-direction: column; gap: 10px; padding: 6px 10px; flex-shrink: 0;}
+        .slider-row { display: flex; align-items: center; gap: 10px; }
+        .slider-icon { width: 16px; height: 16px; color: #d1a15e; flex-shrink: 0; filter: drop-shadow(0 -1px 0 rgba(0,0,0,0.8));}
+        
+        /* Cải tiến Thanh Track - Rãnh kim loại mờ */
+        .slider-input { flex: 1; -webkit-appearance: none; appearance: none; height: 5px; border-radius: 2.5px; outline: none; background: #1a1a1a; border: 1px solid #2e2e2e; box-shadow: inset 0 1px 3px rgba(0,0,0,0.9); }
+        .slider-input::-webkit-slider-runnable-track { background: linear-gradient(to right, #ffaa00 var(--pct,0%), transparent var(--pct,0%)); }
+
+        /* Cải tiến Nút Thumb - Nút xoay kim loại tiện khía (Knurled Metal Knob) */
+        .slider-input::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 22px; border-radius: 4px; background: linear-gradient(145deg, #bbb, #777); border: 1px solid #999; cursor: pointer; box-shadow: 0 3px 6px rgba(0,0,0,0.6); position: relative; top: 50%; transform: translateY(-50%); background-image: repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0,0,0,0.1) 1px, rgba(0,0,0,0.1) 2px); }
+        .slider-input:active::-webkit-slider-thumb { background: linear-gradient(145deg, #777, #555); box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.6); }
+
+        .slider-val { font-size: 10px; color: #a0a0a0; width: 32px; text-align: right; font-weight: bold; letter-spacing: 0.5px; }
 
         /* ── Filter strip ── */
         .filter-strip { flex-shrink:0; display:flex; gap:8px; overflow-x:auto; padding:6px 0; scrollbar-width:none; min-height: 68px; }
@@ -277,7 +284,7 @@
 
 <div id="info-overlay">
     <div class="info-box">
-        <h3>RETRO CAMERA</h3><p class="version">Version 2.1.0 Premium</p><hr>
+        <h3>RETRO CAMERA</h3><p class="version">Version 2.1.3 Premium</p><hr>
         <p class="copyright">© 2026 GamHub.Store.<br>All rights reserved.</p>
         <button id="info-close">CLOSE</button>
     </div>
@@ -312,14 +319,12 @@ function buildLUT(type) {
 }
 const LUTS={};['flat','soft_s','punchy_s','bw_s'].forEach(k=>LUTS[k]=buildLUT(k));
 
-const video = document.getElementById('webcam'), preview = document.getElementById('preview'), captureBtn = document.getElementById('capture-btn'), counterEl = document.getElementById('counter'), statusEl = document.getElementById('status'), canvas = document.getElementById('processing-canvas'), ctx = canvas.getContext('2d', {willReadFrequently: true}), flashOverlay = document.getElementById('flash-overlay'), filmNameEl = document.getElementById('film-name'), filterStrip = document.getElementById('filter-strip'), flipBtn = document.getElementById('flip-btn'), zoomSlider = document.getElementById('zoom-slider'), zoomLabel = document.getElementById('zoom-label'), zoomIn = document.getElementById('zoom-in'), zoomOut = document.getElementById('zoom-out'), galleryBtn = document.getElementById('gallery-btn'), galleryBadge = document.getElementById('gallery-badge'), galleryOverlay = document.getElementById('gallery-overlay'), galleryGrid = document.getElementById('gallery-grid'), galleryClose = document.getElementById('gallery-close'), galleryCount = document.getElementById('gallery-count'), photoViewer = document.getElementById('photo-viewer'), viewerImg = document.getElementById('viewer-img'), viewerBack = document.getElementById('viewer-back'), viewerPrev = document.getElementById('viewer-prev'), viewerNext = document.getElementById('viewer-next'), viewerSave = document.getElementById('viewer-save'), viewerCounter = document.getElementById('viewer-counter'), gridBtn = document.getElementById('grid-btn'), gridOverlay = document.getElementById('grid-overlay'), timerOverlay = document.getElementById('timer-overlay'), timerNumber = document.getElementById('timer-number'), shutterDot = document.getElementById('shutter-dot'), importBtn = document.getElementById('import-btn'), importInput = document.getElementById('import-input'), flashBtn = document.getElementById('flash-btn'), cancelImportBtn = document.getElementById('cancel-import-btn'), ledDisplay = document.querySelector('.led-display');
+const video = document.getElementById('webcam'), preview = document.getElementById('preview'), captureBtn = document.getElementById('capture-btn'), counterEl = document.getElementById('counter'), statusEl = document.getElementById('status'), canvas = document.getElementById('processing-canvas'), ctx = canvas.getContext('2d', {willReadrequently: true}), flashOverlay = document.getElementById('flash-overlay'), filmNameEl = document.getElementById('film-name'), filterStrip = document.getElementById('filter-strip'), flipBtn = document.getElementById('flip-btn'), zoomSlider = document.getElementById('zoom-slider'), zoomLabel = document.getElementById('zoom-label'), zoomIn = document.getElementById('zoom-in'), zoomOut = document.getElementById('zoom-out'), galleryBtn = document.getElementById('gallery-btn'), galleryBadge = document.getElementById('gallery-badge'), galleryOverlay = document.getElementById('gallery-overlay'), galleryGrid = document.getElementById('gallery-grid'), galleryClose = document.getElementById('gallery-close'), galleryCount = document.getElementById('gallery-count'), photoViewer = document.getElementById('photo-viewer'), viewerImg = document.getElementById('viewer-img'), viewerBack = document.getElementById('viewer-back'), viewerPrev = document.getElementById('viewer-prev'), viewerNext = document.getElementById('viewer-next'), viewerSave = document.getElementById('viewer-save'), viewerCounter = document.getElementById('viewer-counter'), gridBtn = document.getElementById('grid-btn'), gridOverlay = document.getElementById('grid-overlay'), timerOverlay = document.getElementById('timer-overlay'), timerNumber = document.getElementById('timer-number'), shutterDot = document.getElementById('shutter-dot'), importBtn = document.getElementById('import-btn'), importInput = document.getElementById('import-input'), flashBtn = document.getElementById('flash-btn'), cancelImportBtn = document.getElementById('cancel-import-btn'), ledDisplay = document.querySelector('.led-display');
 const infoBtn = document.getElementById('info-btn'), infoOverlay = document.getElementById('info-overlay'), infoClose = document.getElementById('info-close');
 infoBtn.addEventListener('click', () => infoOverlay.classList.add('open')); infoClose.addEventListener('click', () => infoOverlay.classList.remove('open'));
 
-// ── KHỞI TẠO BIẾN CHO TƯƠNG PHẢN & TRẠNG THÁI ──
 let photoCount=0, isReviewing=false, activeStream=null, facingMode='environment', currentZoom=1, zoomTrack=null, photoRoll=[], viewerIdx=0, currentFilm=FILMS[0], shootMode='single', isShooting=false, showGrid=false, flashOn=false, currentImportedImageSource=null;
-let timerValue = 0, originalImportedImage = null, previewImportedImage = null;
-let userContrast = 1.0; 
+let timerValue = 0, originalImportedImage = null, previewImportedImage = null, userContrast = 1.0;
 
 const timerBtn = document.getElementById('timer-btn'), timerVal = document.getElementById('timer-val');
 
@@ -370,26 +375,15 @@ flashBtn.addEventListener('click', async () => {
     await applyHardwareFlash(flashOn);
 });
 
-// ── XỬ LÝ THANH TRƯỢT KÉP (ZOOM VÀ TƯƠNG PHẢN) ──
+// ── CẬP NHẬT UI THANH TRƯỢT NÂNG CẤP (Knob & Track) ──
 function updateZoomUI(z) { zoomLabel.textContent=z.toFixed(1)+'×'; const min=parseFloat(zoomSlider.min),max=parseFloat(zoomSlider.max); zoomSlider.style.setProperty('--pct',((z-min)/(max-min)*100)+'%'); zoomSlider.value=z; }
 async function setZoom(z) { const min=parseFloat(zoomSlider.min),max=parseFloat(zoomSlider.max); z=Math.max(min,Math.min(max,z)); currentZoom=z; updateZoomUI(z); if(zoomTrack){ try{await zoomTrack.applyConstraints({advanced:[{zoom:z}]});}catch{} }else{ video.style.transform=facingMode==='user'?`scaleX(-1) scale(${z})`:`scale(${z})`; } }
 zoomSlider.addEventListener('input',()=>setZoom(parseFloat(zoomSlider.value)));
 
-const contrastSlider = document.getElementById('contrast-slider');
-const contrastLabel = document.getElementById('contrast-label');
-function updateContrastUI(c) {
-    let displayVal = Math.round((c - 1) * 100);
-    contrastLabel.textContent = (displayVal > 0 ? '+' : '') + displayVal;
-    const min=parseFloat(contrastSlider.min),max=parseFloat(contrastSlider.max);
-    contrastSlider.style.setProperty('--pct',((c-min)/(max-min)*100)+'%');
-}
-function setContrast(c) {
-    userContrast = c; updateContrastUI(c);
-    // Cập nhật bộ lọc camera live ngay lập tức
-    video.style.filter = currentFilm.liveFilter + ` contrast(${userContrast})`;
-}
+const contrastSlider = document.getElementById('contrast-slider'), contrastLabel = document.getElementById('contrast-label');
+function updateContrastUI(c) { let v = Math.round((c - 1) * 100); contrastLabel.textContent = (v > 0 ? '+' : '') + v; const min=parseFloat(contrastSlider.min),max=parseFloat(contrastSlider.max); contrastSlider.style.setProperty('--pct',((c-min)/(max-min)*100)+'%'); }
+function setContrast(c) { userContrast = c; updateContrastUI(c); video.style.filter = currentFilm.liveFilter + ` contrast(${userContrast})`; }
 contrastSlider.addEventListener('input', () => setContrast(parseFloat(contrastSlider.value)));
-
 
 gridBtn.addEventListener('click',()=>{ showGrid=!showGrid; gridOverlay.classList.toggle('show',showGrid); gridBtn.classList.toggle('active',showGrid); statusEl.textContent = showGrid ? 'GRID ON' : 'GRID OFF'; });
 flipBtn.addEventListener('click',()=>{ facingMode=facingMode==='environment'?'user':'environment'; initCamera(facingMode); video.classList.toggle('mirrored',facingMode==='user'); });
@@ -413,18 +407,13 @@ try {
         const rollContainer = document.createElement('div'); rollContainer.style.cssText = 'position:absolute; inset:0; z-index:10; display:flex; align-items:center; justify-content:center; background:transparent; pointer-events:none;';
         rollContainer.innerHTML = `<svg viewBox="0 0 40 55" style="width: 24px; height: 34px; display:block;"><rect x="17" y="0" width="6" height="3" fill="#222" rx="0.5"/><path d="M10 3h20v2H10z" fill="#999"/><path d="M12 5h16v1H12z" fill="#666"/><rect x="7" y="6" width="26" height="42" rx="3" fill="${film.rollColor}"/><rect x="5" y="9" width="2" height="36" fill="#111" opacity="0.4"/><rect x="11" y="11" width="18" height="32" rx="1.5" fill="${film.labelColor}"/><text x="20" y="29" fill="#ffffff" font-family="monospace" font-size="6.5" font-weight="900" text-anchor="middle" transform="rotate(-90 20 29)" letter-spacing="0.5">${film.labelText}</text><path d="M10 48h20v2H10z" fill="#999"/><rect x="16" y="50" width="8" height="2" fill="#222" rx="0.5"/></svg>`;
         th.appendChild(rollContainer);
-        
-        const lb = document.createElement('div'); lb.className = 'filter-label'; 
-        lb.innerHTML = film.fuji ? `<span style="color:#4a9eff">${film.short}</span>` : (film.digital ? `<span style="color:#00ffcc">${film.short}</span>` : film.short);
-        
+        const lb = document.createElement('div'); lb.className = 'filter-label'; lb.innerHTML = film.fuji ? `<span style="color:#4a9eff">${film.short}</span>` : (film.digital ? `<span style="color:#00ffcc">${film.short}</span>` : film.short);
         btn.appendChild(th); btn.appendChild(lb); filterStrip.appendChild(btn);
         
         btn.addEventListener('click', async () => {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active'); currentFilm = FILMS[idx];
             filmNameEl.textContent = (film.fuji || film.digital) ? `📷 ${film.name}` : film.name;
-            
-            // Kèm tương phản của user vào filter khi đổi cuộn phim
             video.style.filter = film.liveFilter + ` contrast(${userContrast})`;
             
             if(isReviewing && originalImportedImage && previewImportedImage) {
@@ -464,45 +453,32 @@ function drawDateStamp(w,h,film){
 
 function drawWatermark(w,h) { const txt = "SHOT ON RETRO CAM"; const fs = Math.floor(w * 0.022); ctx.font = `bold ${fs}px "Courier New", Courier, monospace`; ctx.fillStyle = "rgba(255, 255, 255, 0.45)"; ctx.shadowBlur = 0; ctx.fillText(txt, w * 0.04, h - h * 0.04); }
 
-// ── ENGINE XỬ LÝ ẢNH CORE CÓ KIẾN TRÚC NHÀ NHÚNG PHẦN CỨNG IMAGE_CAPTURE v2.1 ──
 function captureFrame(film, sourceImg = null, isPreviewMode = false){
     return new Promise(async (resolve, reject) => {
         try {
-            let cw = 1280, ch = 720;
-            let hardwareBitmap = null;
-
+            let cw = 1280, ch = 720; let hardwareBitmap = null;
             if (!sourceImg && zoomTrack && typeof ImageCapture !== 'undefined') {
-                try {
-                    const capturer = new ImageCapture(zoomTrack);
-                    hardwareBitmap = await capturer.grabFrame(); 
-                    cw = hardwareBitmap.width; ch = hardwareBitmap.height;
-                } catch(e) { hardwareBitmap = null; } 
+                try { const capturer = new ImageCapture(zoomTrack); hardwareBitmap = await capturer.grabFrame(); cw = hardwareBitmap.width; ch = hardwareBitmap.height; } catch(e) { hardwareBitmap = null; } 
             }
 
-            if (sourceImg) {
-                cw = sourceImg.width || sourceImg.naturalWidth; ch = sourceImg.height || sourceImg.naturalHeight;
-            } else if (!hardwareBitmap && video.videoWidth) {
-                cw = video.videoWidth; ch = video.videoHeight;
-            }
+            if (sourceImg) { cw = sourceImg.width || sourceImg.naturalWidth; ch = sourceImg.height || sourceImg.naturalHeight; } 
+            else if (!hardwareBitmap && video.videoWidth) { cw = video.videoWidth; ch = video.videoHeight; }
 
             let MAX_DIM = isPreviewMode ? 800 : 3840; 
             if (cw > MAX_DIM || ch > MAX_DIM) { const ratio = Math.min(MAX_DIM / cw, MAX_DIM / ch); cw = Math.round(cw * ratio); ch = Math.round(ch * ratio); }
 
             canvas.width = cw; canvas.height = ch; 
-            
-            // Ép tương phản của người dùng ngay từ lúc vẽ ảnh gốc
             ctx.filter = `contrast(${userContrast})`;
             
-            if (sourceImg) { 
-                ctx.drawImage(sourceImg, 0, 0, cw, ch); 
-            } else if (hardwareBitmap) {
+            if (sourceImg) { ctx.drawImage(sourceImg, 0, 0, cw, ch); } 
+            else if (hardwareBitmap) {
                 if(facingMode==='user'){ ctx.save(); ctx.translate(cw,0); ctx.scale(-1,1); ctx.drawImage(hardwareBitmap, 0, 0, cw, ch); ctx.restore(); }
                 else { ctx.drawImage(hardwareBitmap, 0, 0, cw, ch); }
                 hardwareBitmap.close(); 
             } else { 
                 if(facingMode==='user'){ctx.save();ctx.translate(cw,0);ctx.scale(-1,1);ctx.drawImage(video, 0, 0, cw, ch);ctx.restore();} else ctx.drawImage(video, 0, 0, cw, ch); 
             }
-            ctx.filter = 'none'; // Nhả bộ lọc ra để không ảnh hưởng bước khác
+            ctx.filter = 'none';
             
             const id=ctx.getImageData(0,0,cw,ch),d=id.data;
             if(film.id==='ilford') applyBW(d); else applyGrade(d,film);
@@ -517,13 +493,18 @@ function captureFrame(film, sourceImg = null, isPreviewMode = false){
 
 function triggerFlash(){ flashOverlay.style.transition='opacity 0.04s ease-in';flashOverlay.style.opacity='.9'; setTimeout(()=>{flashOverlay.style.transition='opacity 0.4s ease-out';flashOverlay.style.opacity='0';},70); }
 
+// ── FIX TUYỆT ĐỐI: LƯU ẢNH ÉP TẢI XUỐNG NGẦM (SILENT DOWNLOAD), KHÔNG GỌI HÀM SHARE ──
 async function savePhoto(blob,filename){
-    const file=new File([blob],filename,{type:'image/jpeg'});
-    if(navigator.share&&navigator.canShare?.({files:[file]})){ try{await navigator.share({files:[file],title:'Retro Photo'});return;}catch(e){if(e.name==='AbortError')return;} }
-    const url=URL.createObjectURL(blob); const a=document.createElement('a');a.href=url;a.download=filename; document.body.appendChild(a);a.click();document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1000);
+    const url = URL.createObjectURL(blob); 
+    const a = document.createElement('a'); 
+    a.href = url; 
+    a.download = filename; 
+    document.body.appendChild(a); 
+    a.click(); 
+    document.body.removeChild(a); 
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-// ── IMPORT ẢNH TỪ THƯ VIỆN ──
 importBtn.addEventListener('click', () => { if(isShooting) return; if(navigator.vibrate) navigator.vibrate(35); importInput.click(); });
 importInput.addEventListener('change', (e) => {
     const file = e.target.files[0]; if(!file) return;
@@ -561,9 +542,7 @@ function cancelImportProcess() {
 }
 cancelImportBtn.addEventListener('click', cancelImportProcess);
 
-// ── CỬA TRẬP: XỬ LÝ FIX LỖI "ĐỨNG APP" (TỰ ĐỘNG THOÁT PREVIEW) ──
 captureBtn.addEventListener('click', async function(){
-    // 1. Chụp để lưu ảnh Import đang sửa
     if(isReviewing && originalImportedImage) {
         if(navigator.vibrate) navigator.vibrate(40);
         isShooting = true; captureBtn.disabled = true; statusEl.textContent = 'SAVING HIGH-RES PHOTO...';
@@ -572,18 +551,17 @@ captureBtn.addEventListener('click', async function(){
             try {
                 const {blob, url} = await captureFrame(currentFilm, originalImportedImage, false);
                 const filename = `RETRO_LAB_${currentFilm.short}_${Date.now()}.jpg`;
-                addToGallery(url, blob, filename, currentFilm.name); 
-                await savePhoto(blob, filename); 
-                playWindingSound(); 
+                addToGallery(url, blob, filename, currentFilm.name); await savePhoto(blob, filename); playWindingSound(); 
                 statusEl.textContent = '✓ HIGH-RES PHOTO SAVED';
-                setTimeout(() => { cancelImportProcess(); }, 1500); // 1.5s Tự động thoát ra Camera
+                setTimeout(() => { cancelImportProcess(); }, 1200); 
             } catch (err) { statusEl.textContent = 'SAVE FAILED'; } 
             finally { captureBtn.disabled = false; isShooting = false; }
         }, 50);
         return;
     }
 
-    // 2. Chụp thường / Hẹn giờ
+    if(isReviewing && !originalImportedImage) return;
+
     if(isShooting) return;
     isShooting=true; captureBtn.disabled=true; const film=currentFilm;
     
@@ -594,16 +572,10 @@ captureBtn.addEventListener('click', async function(){
             triggerFlash(); playShutterSound(); statusEl.textContent = 'PROCESSING...';
             const{blob,url}=await captureFrame(film); const filename=`${film.short}_${Date.now()}.jpg`;
             preview.src=url; preview.style.display='block'; isReviewing=true; photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
-            addToGallery(url,blob,filename,film.name); playWindingSound(); statusEl.textContent='✓ SAVED TO GALLERIES'; 
+            addToGallery(url,blob,filename,film.name); playWindingSound(); statusEl.textContent='✓ PHOTO SAVED'; 
             await savePhoto(blob,filename);
             
-            // FIX: TỰ ĐỘNG ẨN ẢNH PREVIEW SAU 1.2s ĐỂ CHỐNG "ĐỨNG APP"
-            setTimeout(() => {
-                if (!originalImportedImage) {
-                    preview.style.display='none'; isReviewing=false; statusEl.textContent='READY TO SHOOT';
-                }
-            }, 1200);
-
+            setTimeout(() => { if (!originalImportedImage) { preview.style.display='none'; isReviewing=false; statusEl.textContent='READY TO SHOOT'; } }, 1200);
         } else {
             if(navigator.vibrate) navigator.vibrate(40);
             triggerFlash(); playShutterSound(); statusEl.textContent='PROCESSING...';
@@ -613,12 +585,7 @@ captureBtn.addEventListener('click', async function(){
             addToGallery(url,blob,filename,film.name); playWindingSound(); statusEl.textContent='✓ PHOTO SAVED'; 
             await savePhoto(blob,filename);
             
-            // FIX: TỰ ĐỘNG ẨN ẢNH PREVIEW SAU 1.2s ĐỂ CHỐNG "ĐỨNG APP"
-            setTimeout(() => {
-                if (!originalImportedImage) {
-                    preview.style.display='none'; isReviewing=false; statusEl.textContent='READY TO SHOOT';
-                }
-            }, 1200);
+            setTimeout(() => { if (!originalImportedImage) { preview.style.display='none'; isReviewing=false; statusEl.textContent='READY TO SHOOT'; } }, 1200);
         }
     } catch (err) { statusEl.textContent = 'CAMERA ERROR'; } 
     finally { captureBtn.disabled=false; isShooting=false; }
