@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Retro Camera Premium v2.0</title>
+    <title>Retro Camera Premium v2.1</title>
     <style>
         /* ── CSS RESET & HYBRID WEBVIEW OPTIMIZATIONS ── */
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -14,7 +14,6 @@
             padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
         }
 
-        /* Thân máy ảnh vân da sần tối màu */
         .camera-body {
             background: linear-gradient(160deg, #222222, #111111); border: 2px solid #2e2e2e; 
             border-radius: 24px; padding: 14px 14px 12px; box-shadow: inset 0 0 14px #000, 0 20px 50px rgba(0,0,0,0.9);
@@ -65,14 +64,13 @@
         #timer-number { font-size:108px; font-weight:bold; color:#fff; text-shadow:0 0 40px rgba(255,170,0,1); animation:pulse 1s ease-in-out infinite; }
         @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
 
-        /* ── Zoom bar ── */
-        .zoom-bar { flex-shrink:0; display:flex; align-items:center; gap:10px; padding:2px 4px; }
-        .zoom-label { font-size:11px; color:#777; width:38px; text-align:right; letter-spacing:1px; font-weight: bold;}
-        #zoom-slider { flex:1; -webkit-appearance:none; appearance:none; height:4px; border-radius:2px; background:linear-gradient(to right, #ffaa00 var(--pct,0%), #2a2a2a var(--pct,0%)); outline:none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); }
-        #zoom-slider::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background: radial-gradient(circle at 30% 30%, #ffd000, #ff8800); border:2px solid #fff; cursor:pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
-        .zoom-btn { background: linear-gradient(to bottom, #2a2a2a, #1a1a1a); border:1px solid #111; color:#888; width:32px; height:32px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1); }
-        .zoom-btn:active { background:#111; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); transform: translateY(1px); }
-        .zoom-btn svg { width:14px; height:14px; fill:currentColor; filter: drop-shadow(0 -1px 0 rgba(0,0,0,0.8));}
+        /* ── BỘ ĐIỀU KHIỂN KÉP (ZOOM + TƯƠNG PHẢN) ── */
+        .sliders-wrapper { display: flex; flex-direction: column; gap: 10px; padding: 2px 6px; flex-shrink: 0;}
+        .slider-row { display: flex; align-items: center; gap: 8px; }
+        .slider-icon { width: 14px; height: 14px; color: #888; flex-shrink: 0; filter: drop-shadow(0 -1px 0 rgba(0,0,0,0.8));}
+        .slider-input { flex: 1; -webkit-appearance: none; appearance: none; height: 3px; border-radius: 2px; outline: none; background: linear-gradient(to right, #ffaa00 var(--pct,0%), #2a2a2a var(--pct,0%)); box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); }
+        .slider-input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffd000, #ff8800); border: 2px solid #fff; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+        .slider-val { font-size: 10px; color: #777; width: 32px; text-align: right; font-weight: bold; letter-spacing: 0.5px; }
 
         /* ── Filter strip ── */
         .filter-strip { flex-shrink:0; display:flex; gap:8px; overflow-x:auto; padding:6px 0; scrollbar-width:none; min-height: 68px; }
@@ -83,7 +81,7 @@
         .filter-label { font-size:9px; color:#666; text-align:center; font-weight:bold; letter-spacing: 0.5px;}
         .filter-btn.active .filter-label { color:#ffaa00; text-shadow: 0 0 5px rgba(255,170,0,0.4); }
 
-        /* ── CỤM NÚT BOTTOM BAR SKEUOMORPHIC 3D ── */
+        /* ── Bottom bar ── */
         .bottom-bar { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:4px 10px; gap:8px; }
 
         .btn-flip, .btn-import, .btn-gallery { 
@@ -215,25 +213,27 @@
         <div id="grid-overlay"><div class="gl h" style="top:33.33%"></div><div class="gl h" style="top:66.66%"></div><div class="gl v" style="left:33.33%"></div><div class="gl v" style="left:66.66%"></div></div>
     </div>
 
-    <div class="zoom-bar">
-        <button class="zoom-btn" id="zoom-out"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></button>
-        <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1">
-        <button class="zoom-btn" id="zoom-in"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-        <span class="zoom-label" id="zoom-label">1.0×</span>
+    <div class="sliders-wrapper">
+        <div class="slider-row">
+            <svg class="slider-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            <input type="range" class="slider-input" id="zoom-slider" min="1" max="5" step="0.1" value="1">
+            <span class="slider-val" id="zoom-label">1.0×</span>
+        </div>
+        <div class="slider-row">
+            <svg class="slider-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2v20a10 10 0 1 0 0-20z"/></svg>
+            <input type="range" class="slider-input" id="contrast-slider" min="0.5" max="1.5" step="0.05" value="1">
+            <span class="slider-val" id="contrast-label">0</span>
+        </div>
     </div>
 
     <div class="filter-strip" id="filter-strip"></div>
 
     <div class="bottom-bar">
         <button class="btn-flip" id="flip-btn" title="Flip Camera">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
         </button>
         <button class="btn-import" id="import-btn" title="Import Photo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </button>
         <input type="file" id="import-input" accept="image/*" style="display: none;">
         
@@ -241,9 +241,7 @@
         
         <button class="btn-gallery" id="gallery-btn" title="Gallery">
             <div class="gallery-inner-lens">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             </div>
             <span class="gallery-badge" id="gallery-badge"></span>
         </button>
@@ -279,14 +277,14 @@
 
 <div id="info-overlay">
     <div class="info-box">
-        <h3>RETRO CAMERA</h3><p class="version">Version 2.0.0 Premium</p><hr>
+        <h3>RETRO CAMERA</h3><p class="version">Version 2.1.0 Premium</p><hr>
         <p class="copyright">© 2026 GamHub.Store.<br>All rights reserved.</p>
         <button id="info-close">CLOSE</button>
     </div>
 </div>
 
 <script>
-// ── DATA PRESETS (SỬA LỖI PHÂN LOẠI Y2K) ──
+// ── DATA PRESETS ──
 const FILMS = [
     { id:'kodak_gold',  name:'Kodak Gold 200',  short:'KG200', liveFilter:'saturate(1.1) sepia(0.18) brightness(1.05) contrast(1.05)',      grade:{rMul:1.12,gMul:1.04,bMul:0.82,rLift:14,gLift:10,bLift:8},  colorCast:null,             curve:'soft_s',  grain:28, vignetteInner:0.28,vignetteOuter:0.78,vignetteAlpha:0.60, border:false, halation:{r:255,g:80,b:20,strength:0.06},    stampColor:'#ff6600',stampShadow:'#cc2200', rollColor:'#e29e00', labelColor:'#bf0603', labelText:'KODAK' },
     { id:'kodak_portra',name:'Kodak Portra 400', short:'P400',   liveFilter:'saturate(0.88) brightness(1.08) contrast(0.92) hue-rotate(5deg)', grade:{rMul:1.06,gMul:1.03,bMul:0.96,rLift:18,gLift:14,bLift:12}, colorCast:null,             curve:'flat',    grain:18, vignetteInner:0.32,vignetteOuter:0.82,vignetteAlpha:0.45, border:false, halation:{r:255,g:120,b:80,strength:0.05},  stampColor:'#ff8833',stampShadow:'#aa3300', rollColor:'#cccccc', labelColor:'#2b2d42', labelText:'PORTRA' },
@@ -318,8 +316,28 @@ const video = document.getElementById('webcam'), preview = document.getElementBy
 const infoBtn = document.getElementById('info-btn'), infoOverlay = document.getElementById('info-overlay'), infoClose = document.getElementById('info-close');
 infoBtn.addEventListener('click', () => infoOverlay.classList.add('open')); infoClose.addEventListener('click', () => infoOverlay.classList.remove('open'));
 
+// ── KHỞI TẠO BIẾN CHO TƯƠNG PHẢN & TRẠNG THÁI ──
 let photoCount=0, isReviewing=false, activeStream=null, facingMode='environment', currentZoom=1, zoomTrack=null, photoRoll=[], viewerIdx=0, currentFilm=FILMS[0], shootMode='single', isShooting=false, showGrid=false, flashOn=false, currentImportedImageSource=null;
-let timerValue = 0;
+let timerValue = 0, originalImportedImage = null, previewImportedImage = null;
+let userContrast = 1.0; 
+
+const timerBtn = document.getElementById('timer-btn'), timerVal = document.getElementById('timer-val');
+
+document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        if (btn.id === 'timer-btn') {
+            if(timerValue === 0) timerValue = 3; else if(timerValue === 3) timerValue = 10; else timerValue = 0;
+            timerVal.textContent = timerValue === 0 ? 'OFF' : timerValue + 's';
+            if (timerValue === 0) { document.querySelector('[data-mode="single"]').click(); return; } else { shootMode = `timer${timerValue}`; }
+        } else {
+            timerValue = 0; timerVal.textContent = 'OFF'; timerBtn.classList.remove('active'); shootMode = btn.dataset.mode;
+        }
+        document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(b => b.classList.remove('active'));
+        if (timerValue > 0) timerBtn.classList.add('active'); else btn.classList.add('active');
+        shutterDot.style.background = (shootMode.startsWith('timer') ? 'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)' : 'radial-gradient(circle at 38% 35%,#ff7766,#cc0000)');
+        statusEl.textContent = (timerValue > 0) ? `TIMER ${timerValue}S` : btn.textContent.trim().toUpperCase();
+    });
+});
 
 let audioCtx = null;
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -352,31 +370,29 @@ flashBtn.addEventListener('click', async () => {
     await applyHardwareFlash(flashOn);
 });
 
+// ── XỬ LÝ THANH TRƯỢT KÉP (ZOOM VÀ TƯƠNG PHẢN) ──
 function updateZoomUI(z) { zoomLabel.textContent=z.toFixed(1)+'×'; const min=parseFloat(zoomSlider.min),max=parseFloat(zoomSlider.max); zoomSlider.style.setProperty('--pct',((z-min)/(max-min)*100)+'%'); zoomSlider.value=z; }
 async function setZoom(z) { const min=parseFloat(zoomSlider.min),max=parseFloat(zoomSlider.max); z=Math.max(min,Math.min(max,z)); currentZoom=z; updateZoomUI(z); if(zoomTrack){ try{await zoomTrack.applyConstraints({advanced:[{zoom:z}]});}catch{} }else{ video.style.transform=facingMode==='user'?`scaleX(-1) scale(${z})`:`scale(${z})`; } }
-zoomSlider.addEventListener('input',()=>setZoom(parseFloat(zoomSlider.value))); zoomIn.addEventListener('click',()=>setZoom(currentZoom+0.5)); zoomOut.addEventListener('click',()=>setZoom(currentZoom-0.5));
+zoomSlider.addEventListener('input',()=>setZoom(parseFloat(zoomSlider.value)));
+
+const contrastSlider = document.getElementById('contrast-slider');
+const contrastLabel = document.getElementById('contrast-label');
+function updateContrastUI(c) {
+    let displayVal = Math.round((c - 1) * 100);
+    contrastLabel.textContent = (displayVal > 0 ? '+' : '') + displayVal;
+    const min=parseFloat(contrastSlider.min),max=parseFloat(contrastSlider.max);
+    contrastSlider.style.setProperty('--pct',((c-min)/(max-min)*100)+'%');
+}
+function setContrast(c) {
+    userContrast = c; updateContrastUI(c);
+    // Cập nhật bộ lọc camera live ngay lập tức
+    video.style.filter = currentFilm.liveFilter + ` contrast(${userContrast})`;
+}
+contrastSlider.addEventListener('input', () => setContrast(parseFloat(contrastSlider.value)));
+
 
 gridBtn.addEventListener('click',()=>{ showGrid=!showGrid; gridOverlay.classList.toggle('show',showGrid); gridBtn.classList.toggle('active',showGrid); statusEl.textContent = showGrid ? 'GRID ON' : 'GRID OFF'; });
 flipBtn.addEventListener('click',()=>{ facingMode=facingMode==='environment'?'user':'environment'; initCamera(facingMode); video.classList.toggle('mirrored',facingMode==='user'); });
-
-const timerBtn = document.getElementById('timer-btn');
-const timerVal = document.getElementById('timer-val');
-
-document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-        if (btn.id === 'timer-btn') {
-            if(timerValue === 0) timerValue = 3; else if(timerValue === 3) timerValue = 10; else timerValue = 0;
-            timerVal.textContent = timerValue === 0 ? 'OFF' : timerValue + 's';
-            if (timerValue === 0) { document.querySelector('[data-mode="single"]').click(); return; } else { shootMode = `timer${timerValue}`; }
-        } else {
-            timerValue = 0; timerVal.textContent = 'OFF'; timerBtn.classList.remove('active'); shootMode = btn.dataset.mode;
-        }
-        document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(b => b.classList.remove('active'));
-        if (timerValue > 0) timerBtn.classList.add('active'); else btn.classList.add('active');
-        shutterDot.style.background = (shootMode.startsWith('timer') ? 'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)' : 'radial-gradient(circle at 38% 35%,#ff7766,#cc0000)');
-        statusEl.textContent = (timerValue > 0) ? `TIMER ${timerValue}S` : btn.textContent.trim().toUpperCase();
-    });
-});
 
 function drawSample(c) {
     const cx=c.getContext('2d'),w=c.width,h=c.height; const g=cx.createLinearGradient(0,0,w,h);
@@ -386,18 +402,8 @@ function drawSample(c) {
 
 try {
     FILMS.forEach((film, idx) => {
-        // Vạch phân cách nhãn FUJI
-        if(film.fuji && (idx === 0 || !FILMS[idx-1].fuji)){ 
-            const d = document.createElement('div'); d.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 2px;'; 
-            d.innerHTML = '<span style="font-size:9px;color:#4a9eff;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);font-weight:bold;">FUJI</span>'; 
-            filterStrip.appendChild(d); 
-        }
-        // Vạch phân cách nhãn DIGI (Máy kỹ thuật số/Y2K)
-        if(film.digital && (idx === 0 || !FILMS[idx-1].digital)){ 
-            const d = document.createElement('div'); d.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 2px;'; 
-            d.innerHTML = '<span style="font-size:9px;color:#00ffcc;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);font-weight:bold;text-shadow: 0 0 4px #00ffcc;">DIGI</span>'; 
-            filterStrip.appendChild(d); 
-        }
+        if(film.fuji && (idx === 0 || !FILMS[idx-1].fuji)){ const d = document.createElement('div'); d.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 2px;'; d.innerHTML = '<span style="font-size:9px;color:#4a9eff;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);font-weight:bold;">FUJI</span>'; filterStrip.appendChild(d); }
+        if(film.digital && (idx === 0 || !FILMS[idx-1].digital)){ const d = document.createElement('div'); d.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 2px;'; d.innerHTML = '<span style="font-size:9px;color:#00ffcc;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);font-weight:bold;text-shadow: 0 0 4px #00ffcc;">DIGI</span>'; filterStrip.appendChild(d); }
 
         const btn = document.createElement('div'); btn.className = 'filter-btn' + (idx === 0 ? ' active' : '');
         const th = document.createElement('div'); th.className = 'filter-thumb'; th.style.position = 'relative';
@@ -409,7 +415,6 @@ try {
         th.appendChild(rollContainer);
         
         const lb = document.createElement('div'); lb.className = 'filter-label'; 
-        // Phân loại nhãn màu sắc cho cuộn phim
         lb.innerHTML = film.fuji ? `<span style="color:#4a9eff">${film.short}</span>` : (film.digital ? `<span style="color:#00ffcc">${film.short}</span>` : film.short);
         
         btn.appendChild(th); btn.appendChild(lb); filterStrip.appendChild(btn);
@@ -418,7 +423,9 @@ try {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active'); currentFilm = FILMS[idx];
             filmNameEl.textContent = (film.fuji || film.digital) ? `📷 ${film.name}` : film.name;
-            video.style.filter = film.liveFilter;
+            
+            // Kèm tương phản của user vào filter khi đổi cuộn phim
+            video.style.filter = film.liveFilter + ` contrast(${userContrast})`;
             
             if(isReviewing && originalImportedImage && previewImportedImage) {
                 statusEl.textContent = 'APPLYING...';
@@ -432,7 +439,7 @@ try {
         });
     });
 } catch(e) { console.error(e); }
-video.style.filter=FILMS[0].liveFilter;
+video.style.filter=FILMS[0].liveFilter + ` contrast(${userContrast})`;
 
 function applyGrade(data,film){ if(!film.grade) return; const{rMul,gMul,bMul,rLift,gLift,bLift}=film.grade; const cc=film.colorCast??null,ccR=cc?.r??0,ccG=cc?.g??0,ccB=cc?.b??0; for(let i=0;i<data.length;i+=4){ data[i]=Math.min(255,Math.max(0,data[i]*rMul*.92+rLift+ccR)); data[i+1]=Math.min(255,Math.max(0,data[i+1]*gMul*.92+gLift+ccG)); data[i+2]=Math.min(255,Math.max(0,data[i+2]*bMul*.92+bLift+ccB)); } }
 function applyBW(data){for(let i=0;i<data.length;i+=4){const l=data[i]*.299+data[i+1]*.587+data[i+2]*.114;data[i]=data[i+1]=data[i+2]=l;}}
@@ -442,7 +449,6 @@ function applyHalation(w,h,hal){ if(!hal)return; const hx=ctx.createRadialGradie
 function applyVignette(w,h,film){ const vg=ctx.createRadialGradient(w/2,h/2,w*film.vignetteInner,w/2,h/2,w*film.vignetteOuter); vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,`rgba(0,0,0,${film.vignetteAlpha})`); ctx.fillStyle=vg;ctx.fillRect(0,0,w,h); }
 function applyPolaroidBorder(w,h){ const t=Math.floor(w*.05),bot=Math.floor(w*.18); ctx.fillStyle='#f5f0e8'; ctx.fillRect(0,0,w,t);ctx.fillRect(0,0,t,h);ctx.fillRect(w-t,0,t,h);ctx.fillRect(0,h-bot,w,bot); }
 
-// ── GIẢI PHÁP ĐÓNG DẤU NGÀY THÁNG 1000% SAFE FONT v2.0 ──
 function drawDateStamp(w,h,film){
     const now=new Date();
     const s=`'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
@@ -458,7 +464,7 @@ function drawDateStamp(w,h,film){
 
 function drawWatermark(w,h) { const txt = "SHOT ON RETRO CAM"; const fs = Math.floor(w * 0.022); ctx.font = `bold ${fs}px "Courier New", Courier, monospace`; ctx.fillStyle = "rgba(255, 255, 255, 0.45)"; ctx.shadowBlur = 0; ctx.fillText(txt, w * 0.04, h - h * 0.04); }
 
-// ── ENGINE XỬ LÝ ẢNH CORE CÓ KIẾN TRÚC NHÀ NHÚNG PHẦN CỨNG IMAGE_CAPTURE v2.0 ──
+// ── ENGINE XỬ LÝ ẢNH CORE CÓ KIẾN TRÚC NHÀ NHÚNG PHẦN CỨNG IMAGE_CAPTURE v2.1 ──
 function captureFrame(film, sourceImg = null, isPreviewMode = false){
     return new Promise(async (resolve, reject) => {
         try {
@@ -482,7 +488,10 @@ function captureFrame(film, sourceImg = null, isPreviewMode = false){
             let MAX_DIM = isPreviewMode ? 800 : 3840; 
             if (cw > MAX_DIM || ch > MAX_DIM) { const ratio = Math.min(MAX_DIM / cw, MAX_DIM / ch); cw = Math.round(cw * ratio); ch = Math.round(ch * ratio); }
 
-            canvas.width = cw; canvas.height = ch; ctx.filter = 'none';
+            canvas.width = cw; canvas.height = ch; 
+            
+            // Ép tương phản của người dùng ngay từ lúc vẽ ảnh gốc
+            ctx.filter = `contrast(${userContrast})`;
             
             if (sourceImg) { 
                 ctx.drawImage(sourceImg, 0, 0, cw, ch); 
@@ -493,6 +502,7 @@ function captureFrame(film, sourceImg = null, isPreviewMode = false){
             } else { 
                 if(facingMode==='user'){ctx.save();ctx.translate(cw,0);ctx.scale(-1,1);ctx.drawImage(video, 0, 0, cw, ch);ctx.restore();} else ctx.drawImage(video, 0, 0, cw, ch); 
             }
+            ctx.filter = 'none'; // Nhả bộ lọc ra để không ảnh hưởng bước khác
             
             const id=ctx.getImageData(0,0,cw,ch),d=id.data;
             if(film.id==='ilford') applyBW(d); else applyGrade(d,film);
@@ -513,6 +523,7 @@ async function savePhoto(blob,filename){
     const url=URL.createObjectURL(blob); const a=document.createElement('a');a.href=url;a.download=filename; document.body.appendChild(a);a.click();document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
+// ── IMPORT ẢNH TỪ THƯ VIỆN ──
 importBtn.addEventListener('click', () => { if(isShooting) return; if(navigator.vibrate) navigator.vibrate(35); importInput.click(); });
 importInput.addEventListener('change', (e) => {
     const file = e.target.files[0]; if(!file) return;
@@ -550,7 +561,9 @@ function cancelImportProcess() {
 }
 cancelImportBtn.addEventListener('click', cancelImportProcess);
 
+// ── CỬA TRẬP: XỬ LÝ FIX LỖI "ĐỨNG APP" (TỰ ĐỘNG THOÁT PREVIEW) ──
 captureBtn.addEventListener('click', async function(){
+    // 1. Chụp để lưu ảnh Import đang sửa
     if(isReviewing && originalImportedImage) {
         if(navigator.vibrate) navigator.vibrate(40);
         isShooting = true; captureBtn.disabled = true; statusEl.textContent = 'SAVING HIGH-RES PHOTO...';
@@ -559,21 +572,18 @@ captureBtn.addEventListener('click', async function(){
             try {
                 const {blob, url} = await captureFrame(currentFilm, originalImportedImage, false);
                 const filename = `RETRO_LAB_${currentFilm.short}_${Date.now()}.jpg`;
-                addToGallery(url, blob, filename, currentFilm.name); await savePhoto(blob, filename); playWindingSound(); 
+                addToGallery(url, blob, filename, currentFilm.name); 
+                await savePhoto(blob, filename); 
+                playWindingSound(); 
                 statusEl.textContent = '✓ HIGH-RES PHOTO SAVED';
-                setTimeout(() => { cancelImportProcess(); }, 1500); 
+                setTimeout(() => { cancelImportProcess(); }, 1500); // 1.5s Tự động thoát ra Camera
             } catch (err) { statusEl.textContent = 'SAVE FAILED'; } 
             finally { captureBtn.disabled = false; isShooting = false; }
         }, 50);
         return;
     }
 
-    if(isReviewing && !originalImportedImage) {
-        preview.style.display='none'; isReviewing=false; statusEl.textContent='READY TO SHOOT';
-        shutterDot.style.background = (shootMode.startsWith('timer') ? 'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)' : 'radial-gradient(circle at 38% 35%,#ff6655,#cc1100)');
-        return;
-    }
-
+    // 2. Chụp thường / Hẹn giờ
     if(isShooting) return;
     isShooting=true; captureBtn.disabled=true; const film=currentFilm;
     
@@ -584,14 +594,31 @@ captureBtn.addEventListener('click', async function(){
             triggerFlash(); playShutterSound(); statusEl.textContent = 'PROCESSING...';
             const{blob,url}=await captureFrame(film); const filename=`${film.short}_${Date.now()}.jpg`;
             preview.src=url; preview.style.display='block'; isReviewing=true; photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
-            addToGallery(url,blob,filename,film.name); playWindingSound(); statusEl.textContent='✓ SAVED TO GALLERIES'; await savePhoto(blob,filename);
+            addToGallery(url,blob,filename,film.name); playWindingSound(); statusEl.textContent='✓ SAVED TO GALLERIES'; 
+            await savePhoto(blob,filename);
+            
+            // FIX: TỰ ĐỘNG ẨN ẢNH PREVIEW SAU 1.2s ĐỂ CHỐNG "ĐỨNG APP"
+            setTimeout(() => {
+                if (!originalImportedImage) {
+                    preview.style.display='none'; isReviewing=false; statusEl.textContent='READY TO SHOOT';
+                }
+            }, 1200);
+
         } else {
             if(navigator.vibrate) navigator.vibrate(40);
             triggerFlash(); playShutterSound(); statusEl.textContent='PROCESSING...';
             await new Promise(r=>setTimeout(r, 60));
             const{blob,url}=await captureFrame(film); const filename=`${film.short}_${Date.now()}.jpg`;
             preview.src=url; preview.style.display='block'; isReviewing=true; photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
-            addToGallery(url,blob,filename,film.name); playWindingSound(); statusEl.textContent='✓ PHOTO SAVED'; await savePhoto(blob,filename);
+            addToGallery(url,blob,filename,film.name); playWindingSound(); statusEl.textContent='✓ PHOTO SAVED'; 
+            await savePhoto(blob,filename);
+            
+            // FIX: TỰ ĐỘNG ẨN ẢNH PREVIEW SAU 1.2s ĐỂ CHỐNG "ĐỨNG APP"
+            setTimeout(() => {
+                if (!originalImportedImage) {
+                    preview.style.display='none'; isReviewing=false; statusEl.textContent='READY TO SHOOT';
+                }
+            }, 1200);
         }
     } catch (err) { statusEl.textContent = 'CAMERA ERROR'; } 
     finally { captureBtn.disabled=false; isShooting=false; }
