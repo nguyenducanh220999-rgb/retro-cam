@@ -52,7 +52,6 @@
             padding:4px 9px; border-radius:4px; font-weight:bold;
             border:1px solid #1e1e1e; box-shadow:inset 0 0 5px #ff000055; letter-spacing:1px;
         }
-        /* Nút Info (About) Bản Quyền */
         .btn-info {
             background: none; border: none; color: #888; font-size: 18px; 
             cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -62,12 +61,13 @@
         .film-name { font-size:10px; color:#ffaa00; letter-spacing:1.5px; text-transform:uppercase; max-width:160px; text-align:right; line-height:1.3; font-weight: bold;}
 
         /* ── Mode bar ── */
-        .mode-bar { display:flex; gap:5px; justify-content:center; flex-shrink:0; }
+        .mode-bar { display:flex; gap:5px; justify-content:center; flex-shrink:0; overflow-x: auto; scrollbar-width: none;}
+        .mode-bar::-webkit-scrollbar { display: none; }
         .mode-btn {
             font-size:10px; padding:5px 11px; border-radius:20px; cursor:pointer;
             border:1.5px solid #333; background:#161616; color:#666;
             letter-spacing:0.5px; transition:all 0.15s; display:flex; align-items:center; gap:4px;
-            min-height: 36px;
+            min-height: 36px; flex-shrink: 0;
         }
         .mode-btn.active { border-color:#ffaa00; color:#ffaa00; background:#1e1800; }
         .mode-btn svg { width:12px; height:12px; display: block; }
@@ -154,7 +154,7 @@
         /* ── Bottom bar ── */
         .bottom-bar {
             flex-shrink:0; display:flex; align-items:center;
-            justify-content:space-between; padding:0 2px; gap:4px;
+            justify-content:space-between; padding:0 4px; gap:4px;
         }
 
         .btn-flip, .btn-import, .btn-gallery {
@@ -184,7 +184,15 @@
             width:16px; height:16px; border-radius:50%;
             background:radial-gradient(circle at 38% 35%, #ff6655, #cc1100);
             box-shadow:0 0 6px rgba(200,0,0,0.5);
+            transition: all 0.2s;
         }
+        /* Style chấm đỏ nhấp nháy khi quay video */
+        .shutter-btn.recording .shutter-dot {
+            border-radius: 2px;
+            transform: scale(0.9);
+            animation: pulseRecord 1s infinite alternate;
+        }
+        @keyframes pulseRecord { from { opacity: 1; } to { opacity: 0.3; } }
 
         .gallery-badge {
             position:absolute; top:-4px; right:-4px;
@@ -285,9 +293,17 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
             GRID
         </button>
+        <button class="mode-btn" id="flash-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            FLASH OFF
+        </button>
         <button class="mode-btn active" data-mode="single">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             SINGLE
+        </button>
+        <button class="mode-btn" data-mode="video">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            VIDEO
         </button>
         <button class="mode-btn" data-mode="timer3">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -473,6 +489,7 @@ const timerNumber   = document.getElementById('timer-number');
 const shutterDot    = document.getElementById('shutter-dot');
 const importBtn     = document.getElementById('import-btn');
 const importInput   = document.getElementById('import-input');
+const flashBtn      = document.getElementById('flash-btn');
 
 // ── INFO OVERLAY (ABOUT) ──
 const infoBtn       = document.getElementById('info-btn');
@@ -481,17 +498,25 @@ const infoClose     = document.getElementById('info-close');
 infoBtn.addEventListener('click', () => infoOverlay.classList.add('open'));
 infoClose.addEventListener('click', () => infoOverlay.classList.remove('open'));
 
+// ── STATE CONTROL ──
 let photoCount=0, isReviewing=false, activeStream=null;
 let facingMode='environment', currentZoom=1, zoomTrack=null;
 let photoRoll=[], viewerIdx=0, currentFilm=FILMS[0];
 let shootMode='single', isShooting=false;
-let showGrid=false;
+let showGrid=false, flashOn=false;
+
+// Biến giữ dữ liệu ảnh gốc phục vụ sếp đổi Filter tự do
+let currentImportedImageSource = null;
+
+// Biến điều khiển quay Video cơ học
+let isRecordingVideo = false;
+let mediaRecorder = null;
+let recordedChunks = [];
+let videoRenderLoopId = null;
 
 // ── WEB AUDIO SYNTHESIZER ──
 let audioCtx = null;
-function initAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function playShutterSound() {
     try {
         initAudio();
@@ -499,32 +524,24 @@ function playShutterSound() {
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
-        const noise = audioCtx.createBufferSource();
-        noise.buffer = buffer;
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'highpass'; filter.frequency.value = 1200;
-        const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter(); filter.type = 'highpass'; filter.frequency.value = 1200;
+        const gain = audioCtx.createGain(); gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.07);
-        noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
-        noise.start();
+        noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); noise.start();
     } catch(e){}
 }
 function playWindingSound() {
     try {
         initAudio();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(90, audioCtx.currentTime);
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(90, audioCtx.currentTime);
         gain.gain.setValueAtTime(0, audioCtx.currentTime);
         for(let i=0; i<5; i++) {
             let t = audioCtx.currentTime + i * 0.07;
-            gain.gain.setValueAtTime(0.12, t);
-            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
+            gain.gain.setValueAtTime(0.12, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
         }
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+        osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.35);
     } catch(e){}
 }
 
@@ -533,23 +550,39 @@ async function initCamera(facing) {
     if(activeStream) activeStream.getTracks().forEach(t=>t.stop());
     try {
         const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1920},height:{ideal:1080}},audio:false});
-        activeStream=stream; video.srcObject=stream;
-        zoomTrack=stream.getVideoTracks()[0];
+        activeStream=stream; video.srcObject=stream; zoomTrack=stream.getVideoTracks()[0];
         const caps=zoomTrack.getCapabilities?.()??{};
         if(caps.zoom){ zoomSlider.min=caps.zoom.min; zoomSlider.max=caps.zoom.max; zoomSlider.step=caps.zoom.step??0.1; zoomSlider.value=caps.zoom.min; currentZoom=caps.zoom.min; }
         else { zoomTrack=null; zoomSlider.min=1; zoomSlider.max=5; zoomSlider.step=0.1; zoomSlider.value=1; currentZoom=1; }
         updateZoomUI(currentZoom); statusEl.textContent='READY TO SHOOT';
+        if(flashOn) applyHardwareFlash(true);
     } catch {
         try { const s=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1920},height:{ideal:1080}},audio:false}); activeStream=s; video.srcObject=s; zoomTrack=null; statusEl.textContent='READY TO SHOOT'; }
         catch { statusEl.textContent='CAMERA ERROR'; alert('Vui lòng cấp quyền camera!'); }
     }
 }
 
+// ĐÈN FLASH PHẦN CỨNG (HARDWARE TORCH)
+async function applyHardwareFlash(state) {
+    if (zoomTrack && zoomTrack.getCapabilities?.().torch) {
+        try { await zoomTrack.applyConstraints({advanced: [{torch: state}]}); } catch(e){}
+    }
+}
+flashBtn.addEventListener('click', async () => {
+    flashOn = !flashOn;
+    flashBtn.classList.toggle('active', flashOn);
+    flashBtn.innerHTML = flashOn ? `
+        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> FLASH ON
+    ` : `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> FLASH OFF
+    `;
+    await applyHardwareFlash(flashOn);
+});
+
 function updateZoomUI(z) {
     zoomLabel.textContent=z.toFixed(1)+'×';
     const min=parseFloat(zoomSlider.min),max=parseFloat(zoomSlider.max);
-    zoomSlider.style.setProperty('--pct',((z-min)/(max-min)*100)+'%');
-    zoomSlider.value=z;
+    zoomSlider.style.setProperty('--pct',((z-min)/(max-min)*100)+'%'); zoomSlider.value=z;
 }
 async function setZoom(z) {
     const min=parseFloat(zoomSlider.min),max=parseFloat(zoomSlider.max);
@@ -562,23 +595,26 @@ zoomIn.addEventListener('click',()=>setZoom(currentZoom+0.5));
 zoomOut.addEventListener('click',()=>setZoom(currentZoom-0.5));
 
 gridBtn.addEventListener('click',()=>{
-    showGrid=!showGrid;
-    gridOverlay.classList.toggle('show',showGrid);
-    gridBtn.classList.toggle('active',showGrid);
+    showGrid=!showGrid; gridOverlay.classList.toggle('show',showGrid); gridBtn.classList.toggle('active',showGrid);
     statusEl.textContent = showGrid ? 'GRID ON' : 'GRID OFF';
 });
 flipBtn.addEventListener('click',()=>{
-    facingMode=facingMode==='environment'?'user':'environment';
-    initCamera(facingMode);
+    facingMode=facingMode==='environment'?'user':'environment'; initCamera(facingMode);
     video.classList.toggle('mirrored',facingMode==='user');
 });
 
-document.querySelectorAll('.mode-btn').forEach(btn=>{
+document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(btn=>{
     btn.addEventListener('click',()=>{
-        document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+        if(isRecordingVideo) return;
+        document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active'); shootMode=btn.dataset.mode;
-        if(shootMode && shootMode.startsWith('timer')) shutterDot.style.background='radial-gradient(circle at 38% 35%,#44aaff,#0066cc)';
-        else shutterDot.style.background='radial-gradient(circle at 38% 35%,#ff6655,#cc1100)';
+        if(shootMode === 'video') {
+            shutterDot.style.background='radial-gradient(circle at 38% 35%,#ff4444,#aa0000)';
+        } else if(shootMode.startsWith('timer')) {
+            shutterDot.style.background='radial-gradient(circle at 38% 35%,#44aaff,#0066cc)';
+        } else {
+            shutterDot.style.background='radial-gradient(circle at 38% 35%,#ff6655,#cc1100)';
+        }
         statusEl.textContent=btn.textContent.trim().toUpperCase();
     });
 });
@@ -600,28 +636,17 @@ try {
             d.innerHTML = '<span style="font-size:9px;color:#4a9eff;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);font-weight:bold;">FUJI</span>';
             filterStrip.appendChild(d);
         }
-        
-        const btn = document.createElement('div'); 
-        btn.className = 'filter-btn' + (idx === 0 ? ' active' : '');
-        
-        const th = document.createElement('div'); 
-        th.className = 'filter-thumb';
-        th.style.position = 'relative';
+        const btn = document.createElement('div'); btn.className = 'filter-btn' + (idx === 0 ? ' active' : '');
+        const th = document.createElement('div'); th.className = 'filter-thumb'; th.style.position = 'relative';
         
         const bgLayer = document.createElement('div');
-        bgLayer.style.cssText = `
-            position: absolute; inset: 0; z-index: 1;
-            background: linear-gradient(135deg, #c87941 0%, #8db36a 30%, #4a7ba8 60%, #2a3a5a 100%);
-            filter: ${film.liveFilter};
-        `;
+        bgLayer.style.cssText = `position: absolute; inset: 0; z-index: 1; background: linear-gradient(135deg, #c87941 0%, #8db36a 30%, #4a7ba8 60%, #2a3a5a 100%); filter: ${film.liveFilter};`;
         const innerEllipse = document.createElement('div');
         innerEllipse.style.cssText = 'position:absolute; top:20%; left:35%; width:40%; height:55%; background:rgba(255,220,160,0.6); border-radius:50%;';
-        bgLayer.appendChild(innerEllipse);
-        th.appendChild(bgLayer);
+        bgLayer.appendChild(innerEllipse); th.appendChild(bgLayer);
         
         const rollContainer = document.createElement('div');
         rollContainer.style.cssText = 'position:absolute; inset:0; z-index:10; display:flex; align-items:center; justify-content:center; background:transparent; pointer-events:none;';
-        
         rollContainer.innerHTML = `
             <svg viewBox="0 0 40 55" style="width: 24px; height: 34px; display:block;">
                 <rect x="17" y="0" width="6" height="3" fill="#222" rx="0.5"/>
@@ -636,22 +661,21 @@ try {
             </svg>
         `;
         th.appendChild(rollContainer);
-
-        const lb = document.createElement('div'); 
-        lb.className = 'filter-label';
-        lb.innerHTML = film.fuji ? `<span style="color:#4a9eff">${film.short}</span>` : film.short;
-        
-        btn.appendChild(th); 
-        btn.appendChild(lb); 
-        filterStrip.appendChild(btn);
+        const lb = document.createElement('div'); lb.className = 'filter-label'; lb.innerHTML = film.fuji ? `<span style="color:#4a9eff">${film.short}</span>` : film.short;
+        btn.appendChild(th); btn.appendChild(lb); filterStrip.appendChild(btn);
         
         btn.addEventListener('click', () => {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active'); 
-            currentFilm = FILMS[idx];
+            btn.classList.add('active'); currentFilm = FILMS[idx];
             filmNameEl.textContent = film.fuji ? `📷 ${film.name}` : film.name;
             video.style.filter = film.liveFilter;
-            statusEl.textContent = film.name.toUpperCase();
+            
+            // ĐẶC BIỆT: Nếu sếp đang xem ảnh Import, bấm đổi cuộn phim nó sẽ cập nhật màu trực tiếp luôn
+            if(currentImportedImageSource) {
+                renderImportedLivePreview();
+            } else {
+                statusEl.textContent = film.name.toUpperCase();
+            }
         });
     });
 } catch(e) { console.error(e); }
@@ -674,10 +698,8 @@ function applyGrain(data,g){for(let i=0;i<data.length;i+=4){const n=(Math.random
 function applyHalation(w,h,hal){
     if(!hal)return;
     const hx=ctx.createRadialGradient(w*.5,h*.2,0,w*.5,h*.2,w*.6);
-    hx.addColorStop(0,`rgba(${hal.r},${hal.g},${hal.b},${hal.strength})`);
-    hx.addColorStop(1,`rgba(${hal.r},${hal.g},${hal.b},0)`);
-    ctx.globalCompositeOperation='screen';ctx.fillStyle=hx;ctx.fillRect(0,0,w,h);
-    ctx.globalCompositeOperation='source-over';
+    hx.addColorStop(0,`rgba(${hal.r},${hal.g},${hal.b},${hal.strength})`);   hx.addColorStop(1,`rgba(${hal.r},${hal.g},${hal.b},0)`);
+    ctx.globalCompositeOperation='screen';ctx.fillStyle=hx;ctx.fillRect(0,0,w,h);ctx.globalCompositeOperation='source-over';
 }
 function applyVignette(w,h,film){
     const vg=ctx.createRadialGradient(w/2,h/2,w*film.vignetteInner,w/2,h/2,w*film.vignetteOuter);
@@ -686,57 +708,38 @@ function applyVignette(w,h,film){
 }
 function applyPolaroidBorder(w,h){
     const t=Math.floor(w*.05),bot=Math.floor(w*.18);
-    ctx.fillStyle='#f5f0e8';
-    ctx.fillRect(0,0,w,t);ctx.fillRect(0,0,t,h);ctx.fillRect(w-t,0,t,h);ctx.fillRect(0,h-bot,w,bot);
+    ctx.fillStyle='#f5f0e8'; ctx.fillRect(0,0,w,t);ctx.fillRect(0,0,t,h);ctx.fillRect(w-t,0,t,h);ctx.fillRect(0,h-bot,w,bot);
 }
 function drawDateStamp(w,h,film){
     const now=new Date();
     const s=`'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
-    const fs=Math.floor(w*.042);
-    ctx.font=`bold ${fs}px "Courier New",monospace`;
+    const fs=Math.floor(w*.042); ctx.font=`bold ${fs}px "Courier New",monospace`;
     ctx.fillStyle=film.stampColor;ctx.shadowColor=film.stampShadow;ctx.shadowBlur=fs*.3;
-    const tw=ctx.measureText(s).width;
-    ctx.fillText(s,w-tw-w*.04,film.border?h-w*.18-h*.02:h-h*.04);
-    ctx.shadowBlur=0;
+    const tw=ctx.measureText(s).width; ctx.fillText(s,w-tw-w*.04,film.border?h-w*.18-h*.02:h-h*.04); ctx.shadowBlur=0;
 }
-
-// TÍNH NĂNG BẢN QUYỀN MỚI: WATERMARK ĐÓNG DẤU TRÊN ẢNH
 function drawWatermark(w,h) {
-    const txt = "SHOT ON RETRO CAM"; // Sếp có thể đổi tên App tại đây
-    const fs = Math.floor(w * 0.022); // Size chữ nhỏ tinh tế (2.2% chiều rộng ảnh)
-    ctx.font = `bold ${fs}px "Courier New",monospace`;
-    ctx.fillStyle = "rgba(255, 255, 255, 0.45)"; // Màu trắng đục 45% (Mờ sương sương)
-    ctx.shadowBlur = 0; // Tắt đổ bóng để không làm dơ ảnh
-    ctx.fillText(txt, w * 0.04, h - h * 0.04); // Canh góc dưới cùng Cạnh Trái (Đối xứng với Ngày Tháng)
+    const txt = "SHOT ON RETRO CAM"; const fs = Math.floor(w * 0.022);
+    ctx.font = `bold ${fs}px "Courier New",monospace`; ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+    ctx.fillText(txt, w * 0.04, film.border ? h - w * 0.18 - h * 0.02 : h - h * 0.04);
 }
 
-// ── CAPTURE & PROCESS ENGINE ──
+// ── ENGINE XỬ LÝ ẢNH CORE ──
 function captureFrame(film, sourceImg = null){
     return new Promise(resolve=>{
         if (sourceImg) {
-            canvas.width = sourceImg.naturalWidth || 1280;
-            canvas.height = sourceImg.naturalHeight || 720;
-            ctx.filter = 'none';
-            ctx.drawImage(sourceImg, 0, 0, canvas.width, canvas.height);
+            canvas.width = sourceImg.naturalWidth || 1280; canvas.height = sourceImg.naturalHeight || 720;
+            ctx.filter = 'none'; ctx.drawImage(sourceImg, 0, 0, canvas.width, canvas.height);
         } else {
-            canvas.width=video.videoWidth||1280;canvas.height=video.videoHeight||720;
-            ctx.filter='none';
+            canvas.width=video.videoWidth||1280;canvas.height=video.videoHeight||720; ctx.filter='none';
             if(facingMode==='user'){ctx.save();ctx.translate(canvas.width,0);ctx.scale(-1,1);ctx.drawImage(video,0,0,canvas.width,canvas.height);ctx.restore();}
             else ctx.drawImage(video,0,0,canvas.width,canvas.height);
         }
-        
         const id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data;
         if(film.id==='ilford') applyBW(d); else applyGrade(d,film);
-        if(LUTS[film.curve]) applyCurve(d,LUTS[film.curve]); 
-        applyGrain(d,film.grain);
-        ctx.putImageData(id,0,0);
-        applyHalation(canvas.width,canvas.height,film.halation);
-        applyVignette(canvas.width,canvas.height,film);
+        if(LUTS[film.curve]) applyCurve(d,LUTS[film.curve]); applyGrain(d,film.grain); ctx.putImageData(id,0,0);
+        applyHalation(canvas.width,canvas.height,film.halation); applyVignette(canvas.width,canvas.height,film);
         if(film.border) applyPolaroidBorder(canvas.width,canvas.height);
-        
-        drawDateStamp(canvas.width,canvas.height,film);
-        drawWatermark(canvas.width,canvas.height); // Kích hoạt in Watermark chìm
-        
+        drawDateStamp(canvas.width,canvas.height,film); drawWatermark(canvas.width,canvas.height);
         canvas.toBlob(blob=>resolve({blob,url:URL.createObjectURL(blob)}),'image/jpeg',.93);
     });
 }
@@ -751,153 +754,217 @@ async function savePhoto(blob,filename){
     if(navigator.share&&navigator.canShare?.({files:[file]})){
         try{await navigator.share({files:[file],title:'Retro Photo'});return;}catch(e){if(e.name==='AbortError')return;}
     }
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=filename;
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    const url=URL.createObjectURL(blob); const a=document.createElement('a');a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
+// HÀM HIỂN THỊ ẢNH IMPORT LIVE PREVIEW KHI ĐỔI FILTER
+async function renderImportedLivePreview() {
+    if(!currentImportedImageSource) return;
+    statusEl.textContent = 'RENDERING FILTER...';
+    const {url} = await captureFrame(currentFilm, currentImportedImageSource);
+    preview.src = url;
+    preview.style.display = 'block';
+    statusEl.textContent = 'CHOOSE FILTER OR TAP SHUTTER TO BAKE';
+}
+
+// ── LOGIC IMPORT FILE THƯ VIỆN CHUẨN UX ──
+importBtn.addEventListener('click', () => {
+    if(isShooting || isRecordingVideo) return;
+    importInput.click();
+});
+importInput.addEventListener('change', (e) => {
+    const file = e.target.files[0]; if(!file) return;
+    statusEl.textContent = 'LOADING IMAGE...';
+    
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+        currentImportedImageSource = img;
+        isReviewing = true;
+        // Đổi màu nút Shutter sang chế độ in ảnh để sếp nhận biết
+        shutterDot.style.background = 'radial-gradient(circle at 38% 35%, #ffcc44, #ff8800)';
+        renderImportedLivePreview();
+    };
+});
+
+// ── TÍNH NĂNG QUAY VIDEO RETRO MODE LUỒNG CAO CẤP ──
+function runVideoRenderLoop() {
+    if(!isRecordingVideo) return;
+    canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
+    
+    // Áp bộ lọc màu Live của phim thẳng vào Canvas cơ học phần cứng
+    ctx.filter = currentFilm.liveFilter;
+    if(facingMode === 'user') {
+        ctx.save(); ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height); ctx.restore();
+    } else {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    }
+    ctx.filter = 'none';
+    
+    // Đóng dấu ngày tháng chạy thời gian thực trên Video
+    const now = new Date();
+    const s = `'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
+    ctx.font = `bold ${Math.floor(canvas.width * 0.042)}px "Courier New",monospace`;
+    ctx.fillStyle = currentFilm.stampColor;
+    ctx.fillText(s, canvas.width - ctx.measureText(s).width - (canvas.width*0.04), canvas.height - (canvas.height*0.04));
+    
+    videoRenderLoopId = requestAnimationFrame(runVideoRenderLoop);
+}
+
+async function startVideoRecording() {
+    try {
+        isShooting = true; isRecordingVideo = true;
+        captureBtn.classList.add('recording');
+        statusEl.textContent = '• RECORDING RETRO VIDEO...';
+        playShutterSound();
+        
+        canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
+        runVideoRenderLoop();
+        
+        const stream = canvas.captureStream(25); // Ghi luồng ở tần số 25fps cổ điển
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
+        mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const filename = `VIDEO_${currentFilm.short}_${Date.now()}.webm`;
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a'); a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            
+            statusEl.textContent = '✓ VIDEO SAVED TO FILES';
+            playWindingSound();
+            isShooting = false; isRecordingVideo = false;
+            captureBtn.classList.remove('recording');
+        };
+        mediaRecorder.start();
+    } catch(err) {
+        isShooting = false; isRecordingVideo = false;
+        captureBtn.classList.remove('recording');
+        statusEl.textContent = 'RECORDING ERROR';
+    }
+}
+function stopVideoRecording() {
+    if(mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        cancelAnimationFrame(videoRenderLoopId);
+    }
+}
+
+// ── ĐIỀU HƯỚNG SỰ KIỆN NÚT CỬA TRẬP (SHUTTER ROUTER BUTTON) ──
+captureBtn.addEventListener('click', async function(){
+    // TRƯỜNG HỢP 1: Sếp đang xem ảnh Import và muốn BAKE (Nướng ảnh) & LƯU FILE
+    if(isReviewing && currentImportedImageSource) {
+        isShooting = true; captureBtn.disabled = true;
+        statusEl.textContent = 'BAKING FILM EMULSION...';
+        triggerFlash(); playShutterSound();
+        
+        try {
+            const film = currentFilm;
+            const {blob, url} = await captureFrame(film, currentImportedImageSource);
+            const filename = `RETRO_LAB_${film.short}_${Date.now()}.jpg`;
+            
+            addToGallery(url, blob, filename, film.name);
+            await savePhoto(blob, filename);
+            
+            // XÁC NHẬN LƯU THÀNH CÔNG RÕ RÀNG VÀ CHUYỂN NGAY VỀ CAMERA
+            playWindingSound();
+            statusEl.textContent = '✓ PHOTO SAVED TO GALLERY';
+            
+            // Giải phóng trạng thái review, ẩn lớp ảnh đè
+            currentImportedImageSource = null;
+            preview.style.display = 'none';
+            isReviewing = false;
+            importInput.value = '';
+            shutterDot.style.background = 'radial-gradient(circle at 38% 35%,#ff6655,#cc1100)';
+        } catch (err) {
+            statusEl.textContent = 'SAVE FAILED';
+        } finally {
+            captureBtn.disabled = false; isShooting = false;
+        }
+        return;
+    }
+
+    // TRƯỜNG HỢP 2: Đang ở chế độ xem ảnh chụp thường (Review Mode thường)
+    if(isReviewing) {
+        preview.style.display='none'; isReviewing=false;
+        statusEl.textContent='READY TO SHOOT';
+        shutterDot.style.background = (shootMode === 'video') ? 'radial-gradient(circle at 38% 35%,#ff4444,#aa0000)' : (shootMode.startsWith('timer')) ? 'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)' : 'radial-gradient(circle at 38% 35%,#ff6655,#cc1100)';
+        return;
+    }
+
+    if(isShooting && !isRecordingVideo) return;
+
+    // TRƯỜNG HỢP 3: ĐANG Ở CHẾ ĐỘ QUAY VIDEO
+    if(shootMode === 'video') {
+        if(!isRecordingVideo) {
+            await startVideoRecording();
+        } else {
+            stopVideoRecording();
+        }
+        return;
+    }
+
+    // TRƯỜNG HỢP 4: CHỤP ẢNH LIVE CAMERA THƯỜNG (CÓ TIMER HOẶC SINGLE)
+    isShooting=true; captureBtn.disabled=true;
+    const film=currentFilm;
+
+    try {
+        if(shootMode==='timer3'||shootMode==='timer10'){
+            const secs = shootMode==='timer3'?3:10; statusEl.textContent=`TIMER ${secs}s...`;
+            await runTimer(secs); triggerFlash(); playShutterSound(); statusEl.textContent = 'PROCESSING...';
+            
+            const{blob,url}=await captureFrame(film); const filename=`${film.short}_${Date.now()}.jpg`;
+            preview.src=url; preview.style.display='block'; isReviewing=true;
+            photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
+            addToGallery(url,blob,filename,film.name); playWindingSound();
+            statusEl.textContent='✓ SAVED TO GALLERIES';
+            await savePhoto(blob,filename);
+        } else {
+            triggerFlash(); playShutterSound(); statusEl.textContent='PROCESSING...';
+            await new Promise(r=>setTimeout(r, 60));
+            const{blob,url}=await captureFrame(film); const filename=`${film.short}_${Date.now()}.jpg`;
+            
+            preview.src=url; preview.style.display='block'; isReviewing=true;
+            photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
+            addToGallery(url,blob,filename,film.name); playWindingSound();
+            statusEl.textContent='✓ PHOTO SAVED';
+            await savePhoto(blob,filename);
+        }
+    } catch (err) {
+        statusEl.textContent = 'CAMERA ERROR';
+    } finally {
+        captureBtn.disabled=false; isShooting=false;
+    }
+});
+
 function addToGallery(url,blob,filename,filmName){
-    photoRoll.push({url,blob,filename,filmName});
-    const n=photoRoll.length;
-    galleryBadge.textContent=n;galleryBadge.style.display='flex';
+    photoRoll.push({url,blob,filename,filmName}); const n=photoRoll.length;
+    galleryBadge.textContent=n; galleryBadge.style.display='flex';
     const th=document.createElement('div');th.className='gallery-thumb';th.dataset.idx=n-1;
     const img=document.createElement('img');img.src=url;img.loading='lazy';
     const il=document.createElement('span');il.className='thumb-idx';il.textContent=n;
-    th.appendChild(img);th.appendChild(il);
-    th.addEventListener('click',()=>openViewer(parseInt(th.dataset.idx)));
-    galleryGrid.insertBefore(th,galleryGrid.firstChild);
-    galleryCount.textContent=n+' SHOTS';
+    th.appendChild(img);th.appendChild(il); th.addEventListener('click',()=>openViewer(parseInt(th.dataset.idx)));
+    galleryGrid.insertBefore(th,galleryGrid.firstChild); galleryCount.textContent=n+' SHOTS';
 }
 galleryBtn.addEventListener('click',()=>{if(photoRoll.length===0){statusEl.textContent='NO PHOTOS YET';return;}galleryOverlay.classList.add('open');});
 galleryClose.addEventListener('click',()=>galleryOverlay.classList.remove('open'));
 
 function openViewer(idx){viewerIdx=idx;renderViewer();galleryOverlay.classList.remove('open');photoViewer.classList.add('open');}
 function renderViewer(){
-    const p=photoRoll[viewerIdx];
-    viewerImg.src=p.url;
-    viewerCounter.textContent=`${viewerIdx+1} / ${photoRoll.length}  [${p.filmName}]`;
-    viewerPrev.style.opacity=viewerIdx>0?'1':'.3';
-    viewerNext.style.opacity=viewerIdx<photoRoll.length-1?'1':'.3';
+    const p=photoRoll[viewerIdx]; viewerImg.src=p.url; viewerCounter.textContent=`${viewerIdx+1} / ${photoRoll.length}  [${p.filmName}]`;
+    viewerPrev.style.opacity=viewerIdx>0?'1':'.3'; viewerNext.style.opacity=viewerIdx<photoRoll.length-1?'1':'.3';
 }
 viewerBack.addEventListener('click',()=>{photoViewer.classList.remove('open');galleryOverlay.classList.add('open');});
 viewerPrev.addEventListener('click',()=>{if(viewerIdx>0){viewerIdx--;renderViewer();}});
 viewerNext.addEventListener('click',()=>{if(viewerIdx<photoRoll.length-1){viewerIdx++;renderViewer();}});
 viewerSave.addEventListener('click',()=>{const p=photoRoll[viewerIdx];savePhoto(p.blob,p.filename);});
 
-let sx=0;
-viewerImg.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});
+let sx=0; viewerImg.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});
 viewerImg.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50){if(dx<0&&viewerIdx<photoRoll.length-1){viewerIdx++;renderViewer();}if(dx>0&&viewerIdx>0){viewerIdx--;renderViewer();}}});
-
-function runTimer(s){
-    return new Promise(resolve=>{
-        timerOverlay.classList.add('show');timerNumber.textContent=s;
-        let c=s;
-        const iv=setInterval(()=>{c--;if(c<=0){clearInterval(iv);timerOverlay.classList.remove('show');resolve();}else timerNumber.textContent=c;},1000);
-    });
-}
-
-// ── LOGIC IMPORT FILE (HỖ TRỢ TRY/CATCH CHỐNG LIỆT NÚT) ──
-importBtn.addEventListener('click', () => {
-    if(isShooting) return;
-    if(navigator.vibrate) navigator.vibrate(35);
-    importInput.click();
-});
-
-importInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if(!file) return;
-    
-    isShooting = true; captureBtn.disabled = true;
-    statusEl.textContent = 'PROCESSING IMAGE...';
-    
-    playShutterSound();
-    
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-    img.onload = async () => {
-        try {
-            const film = currentFilm;
-            const {blob, url} = await captureFrame(film, img);
-            const filename = `FILM_LAB_${film.short}_${Date.now()}.jpg`;
-            
-            preview.src = url; preview.style.display = 'block'; isReviewing = true;
-            photoCount++; counterEl.textContent = String(photoCount).padStart(2, '0');
-            addToGallery(url, blob, filename, film.name);
-            
-            playWindingSound();
-            statusEl.textContent = '✓ LAB SUCCESS';
-            await savePhoto(blob, filename);
-        } catch (err) {
-            console.error("Lỗi tráng ảnh Import:", err);
-            statusEl.textContent = 'ERROR PROCESSING';
-        } finally {
-            captureBtn.disabled = false; isShooting = false;
-            importInput.value = '';
-        }
-    };
-    img.onerror = () => {
-        statusEl.textContent = 'IMAGE LOAD ERROR';
-        captureBtn.disabled = false; isShooting = false;
-        importInput.value = '';
-    }
-});
-
-// ── SHUTTER TRIGGER EVENT (HỖ TRỢ TRY/CATCH CHỐNG LIỆT NÚT) ──
-captureBtn.addEventListener('click',async function(){
-    if(isReviewing){
-        preview.style.display='none';isReviewing=false;
-        statusEl.textContent='READY TO SHOOT';
-        const freshDot = document.getElementById('shutter-dot');
-        if(freshDot) freshDot.style.background = (shootMode && shootMode.startsWith('timer')) ? 'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)' : 'radial-gradient(circle at 38% 35%,#ff6655,#cc1100)';
-        return;
-    }
-    if(isShooting)return;
-    isShooting=true;captureBtn.disabled=true;
-    const film=currentFilm;
-
-    try {
-        if(shootMode==='timer3'||shootMode==='timer10'){
-            const secs=shootMode==='timer3'?3:10;
-            statusEl.textContent=`TIMER ${secs}s...`;
-            await runTimer(secs);
-            triggerFlash();
-            playShutterSound();
-            statusEl.textContent = 'PROCESSING...';
-            
-            const{blob,url}=await captureFrame(film);const filename=`${film.short}_${Date.now()}.jpg`;
-            preview.src=url;preview.style.display='block';isReviewing=true;
-            photoCount++;counterEl.textContent=String(photoCount).padStart(2,'0');
-            addToGallery(url,blob,filename,film.name);
-            
-            playWindingSound();
-            statusEl.textContent='✓ SAVED';captureBtn.textContent='';
-            captureBtn.innerHTML='<div class="shutter-dot" id="shutter-dot" style="background:radial-gradient(circle at 38% 35%,#44aaff,#0066cc)"></div>';
-            await savePhoto(blob,filename);
-        } else {
-            if(navigator.vibrate) navigator.vibrate(40);
-            triggerFlash();
-            playShutterSound();
-            statusEl.textContent='PROCESSING...';
-            
-            await new Promise(r=>setTimeout(r, 60)); 
-            const{blob,url}=await captureFrame(film);const filename=`${film.short}_${Date.now()}.jpg`;
-            
-            preview.src=url;preview.style.display='block';isReviewing=true;
-            photoCount++;counterEl.textContent=String(photoCount).padStart(2,'0');
-            addToGallery(url,blob,filename,film.name);
-            
-            playWindingSound();
-            statusEl.textContent='✓ TAP SHUTTER TO CONTINUE';
-            await savePhoto(blob,filename);
-        }
-    } catch (err) {
-        console.error("Lỗi bấm chụp:", err);
-        statusEl.textContent = 'ERROR SAVING PHOTO';
-    } finally {
-        captureBtn.disabled=false;isShooting=false;
-    }
-});
 
 window.addEventListener('beforeunload',()=>{if(activeStream)activeStream.getTracks().forEach(t=>t.stop());});
 window.addEventListener('load',()=>initCamera(facingMode));
