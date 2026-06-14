@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Retro Camera Premium v2.1.3</title>
+    <title>Retro Camera Premium Studio</title>
     <style>
         /* ── CSS RESET & HYBRID WEBVIEW OPTIMIZATIONS ── */
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -64,20 +64,32 @@
         #timer-number { font-size:108px; font-weight:bold; color:#fff; text-shadow:0 0 40px rgba(255,170,0,1); animation:pulse 1s ease-in-out infinite; }
         @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
 
-        /* ── BỘ ĐIỀU KHIỂN KÉP NÂNG CẤP UI (ZOOM + TƯƠNG PHẢN) ── */
-        .sliders-wrapper { display: flex; flex-direction: column; gap: 10px; padding: 6px 10px; flex-shrink: 0;}
+        /* ── BỘ ĐIỀU KHIỂN KÉP NÂNG CẤP UI (PRO DSLR GROOVE) ── */
+        .sliders-wrapper { display: flex; flex-direction: column; gap: 14px; padding: 6px 10px; flex-shrink: 0;}
         .slider-row { display: flex; align-items: center; gap: 10px; }
-        .slider-icon { width: 16px; height: 16px; color: #d1a15e; flex-shrink: 0; filter: drop-shadow(0 -1px 0 rgba(0,0,0,0.8));}
+        .slider-icon { width: 15px; height: 15px; color: #999; flex-shrink: 0; filter: drop-shadow(0 -1px 0 rgba(0,0,0,0.8));}
         
-        /* Cải tiến Thanh Track - Rãnh kim loại mờ */
-        .slider-input { flex: 1; -webkit-appearance: none; appearance: none; height: 5px; border-radius: 2.5px; outline: none; background: #1a1a1a; border: 1px solid #2e2e2e; box-shadow: inset 0 1px 3px rgba(0,0,0,0.9); }
-        .slider-input::-webkit-slider-runnable-track { background: linear-gradient(to right, #ffaa00 var(--pct,0%), transparent var(--pct,0%)); }
+        /* Rãnh trượt đen nhám, khắc sâu chìm vào thân máy, KHÔNG MÀU VÀNG */
+        .slider-input { 
+            flex: 1; -webkit-appearance: none; appearance: none; 
+            height: 3px; border-radius: 2px; outline: none; 
+            background: #0a0a0a; border: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.9), 0 1px 0 rgba(255,255,255,0.08); 
+        }
+        .slider-input::-webkit-slider-runnable-track { background: transparent; }
 
-        /* Cải tiến Nút Thumb - Nút xoay kim loại tiện khía (Knurled Metal Knob) */
-        .slider-input::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 22px; border-radius: 4px; background: linear-gradient(145deg, #bbb, #777); border: 1px solid #999; cursor: pointer; box-shadow: 0 3px 6px rgba(0,0,0,0.6); position: relative; top: 50%; transform: translateY(-50%); background-image: repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0,0,0,0.1) 1px, rgba(0,0,0,0.1) 2px); }
-        .slider-input:active::-webkit-slider-thumb { background: linear-gradient(145deg, #777, #555); box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.6); }
+        /* Nút vặn kim loại có vạch chia độ vàng */
+        .slider-input::-webkit-slider-thumb { 
+            -webkit-appearance: none; width: 14px; height: 24px; border-radius: 3px; 
+            background: linear-gradient(145deg, #555, #222); border: 1px solid #000; 
+            cursor: pointer; position: relative; 
+            box-shadow: 0 3px 6px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.3);
+            /* Vạch định vị màu vàng ở giữa */
+            background-image: linear-gradient(to right, transparent 44%, #ffaa00 44%, #ffaa00 56%, transparent 56%);
+        }
+        .slider-input:active::-webkit-slider-thumb { background: linear-gradient(145deg, #444, #111); background-image: linear-gradient(to right, transparent 44%, #ffaa00 44%, #ffaa00 56%, transparent 56%); }
 
-        .slider-val { font-size: 10px; color: #a0a0a0; width: 32px; text-align: right; font-weight: bold; letter-spacing: 0.5px; }
+        .slider-val { font-size: 10px; color: #888; width: 32px; text-align: right; font-weight: bold; letter-spacing: 0.5px; font-family: 'Courier New', monospace; }
 
         /* ── Filter strip ── */
         .filter-strip { flex-shrink:0; display:flex; gap:8px; overflow-x:auto; padding:6px 0; scrollbar-width:none; min-height: 68px; }
@@ -284,7 +296,7 @@
 
 <div id="info-overlay">
     <div class="info-box">
-        <h3>RETRO CAMERA</h3><p class="version">Version 2.1.3 Premium</p><hr>
+        <h3>RETRO CAMERA</h3><p class="version">Version 2.1.4 Premium</p><hr>
         <p class="copyright">© 2026 GamHub.Store.<br>All rights reserved.</p>
         <button id="info-close">CLOSE</button>
     </div>
@@ -319,7 +331,7 @@ function buildLUT(type) {
 }
 const LUTS={};['flat','soft_s','punchy_s','bw_s'].forEach(k=>LUTS[k]=buildLUT(k));
 
-const video = document.getElementById('webcam'), preview = document.getElementById('preview'), captureBtn = document.getElementById('capture-btn'), counterEl = document.getElementById('counter'), statusEl = document.getElementById('status'), canvas = document.getElementById('processing-canvas'), ctx = canvas.getContext('2d', {willReadrequently: true}), flashOverlay = document.getElementById('flash-overlay'), filmNameEl = document.getElementById('film-name'), filterStrip = document.getElementById('filter-strip'), flipBtn = document.getElementById('flip-btn'), zoomSlider = document.getElementById('zoom-slider'), zoomLabel = document.getElementById('zoom-label'), zoomIn = document.getElementById('zoom-in'), zoomOut = document.getElementById('zoom-out'), galleryBtn = document.getElementById('gallery-btn'), galleryBadge = document.getElementById('gallery-badge'), galleryOverlay = document.getElementById('gallery-overlay'), galleryGrid = document.getElementById('gallery-grid'), galleryClose = document.getElementById('gallery-close'), galleryCount = document.getElementById('gallery-count'), photoViewer = document.getElementById('photo-viewer'), viewerImg = document.getElementById('viewer-img'), viewerBack = document.getElementById('viewer-back'), viewerPrev = document.getElementById('viewer-prev'), viewerNext = document.getElementById('viewer-next'), viewerSave = document.getElementById('viewer-save'), viewerCounter = document.getElementById('viewer-counter'), gridBtn = document.getElementById('grid-btn'), gridOverlay = document.getElementById('grid-overlay'), timerOverlay = document.getElementById('timer-overlay'), timerNumber = document.getElementById('timer-number'), shutterDot = document.getElementById('shutter-dot'), importBtn = document.getElementById('import-btn'), importInput = document.getElementById('import-input'), flashBtn = document.getElementById('flash-btn'), cancelImportBtn = document.getElementById('cancel-import-btn'), ledDisplay = document.querySelector('.led-display');
+const video = document.getElementById('webcam'), preview = document.getElementById('preview'), captureBtn = document.getElementById('capture-btn'), counterEl = document.getElementById('counter'), statusEl = document.getElementById('status'), canvas = document.getElementById('processing-canvas'), ctx = canvas.getContext('2d', {willReadFrequently: true}), flashOverlay = document.getElementById('flash-overlay'), filmNameEl = document.getElementById('film-name'), filterStrip = document.getElementById('filter-strip'), flipBtn = document.getElementById('flip-btn'), zoomSlider = document.getElementById('zoom-slider'), zoomLabel = document.getElementById('zoom-label'), zoomIn = document.getElementById('zoom-in'), zoomOut = document.getElementById('zoom-out'), galleryBtn = document.getElementById('gallery-btn'), galleryBadge = document.getElementById('gallery-badge'), galleryOverlay = document.getElementById('gallery-overlay'), galleryGrid = document.getElementById('gallery-grid'), galleryClose = document.getElementById('gallery-close'), galleryCount = document.getElementById('gallery-count'), photoViewer = document.getElementById('photo-viewer'), viewerImg = document.getElementById('viewer-img'), viewerBack = document.getElementById('viewer-back'), viewerPrev = document.getElementById('viewer-prev'), viewerNext = document.getElementById('viewer-next'), viewerSave = document.getElementById('viewer-save'), viewerCounter = document.getElementById('viewer-counter'), gridBtn = document.getElementById('grid-btn'), gridOverlay = document.getElementById('grid-overlay'), timerOverlay = document.getElementById('timer-overlay'), timerNumber = document.getElementById('timer-number'), shutterDot = document.getElementById('shutter-dot'), importBtn = document.getElementById('import-btn'), importInput = document.getElementById('import-input'), flashBtn = document.getElementById('flash-btn'), cancelImportBtn = document.getElementById('cancel-import-btn'), ledDisplay = document.querySelector('.led-display');
 const infoBtn = document.getElementById('info-btn'), infoOverlay = document.getElementById('info-overlay'), infoClose = document.getElementById('info-close');
 infoBtn.addEventListener('click', () => infoOverlay.classList.add('open')); infoClose.addEventListener('click', () => infoOverlay.classList.remove('open'));
 
@@ -375,13 +387,12 @@ flashBtn.addEventListener('click', async () => {
     await applyHardwareFlash(flashOn);
 });
 
-// ── CẬP NHẬT UI THANH TRƯỢT NÂNG CẤP (Knob & Track) ──
-function updateZoomUI(z) { zoomLabel.textContent=z.toFixed(1)+'×'; const min=parseFloat(zoomSlider.min),max=parseFloat(zoomSlider.max); zoomSlider.style.setProperty('--pct',((z-min)/(max-min)*100)+'%'); zoomSlider.value=z; }
+function updateZoomUI(z) { zoomLabel.textContent=z.toFixed(1)+'×'; zoomSlider.value=z; }
 async function setZoom(z) { const min=parseFloat(zoomSlider.min),max=parseFloat(zoomSlider.max); z=Math.max(min,Math.min(max,z)); currentZoom=z; updateZoomUI(z); if(zoomTrack){ try{await zoomTrack.applyConstraints({advanced:[{zoom:z}]});}catch{} }else{ video.style.transform=facingMode==='user'?`scaleX(-1) scale(${z})`:`scale(${z})`; } }
 zoomSlider.addEventListener('input',()=>setZoom(parseFloat(zoomSlider.value)));
 
 const contrastSlider = document.getElementById('contrast-slider'), contrastLabel = document.getElementById('contrast-label');
-function updateContrastUI(c) { let v = Math.round((c - 1) * 100); contrastLabel.textContent = (v > 0 ? '+' : '') + v; const min=parseFloat(contrastSlider.min),max=parseFloat(contrastSlider.max); contrastSlider.style.setProperty('--pct',((c-min)/(max-min)*100)+'%'); }
+function updateContrastUI(c) { let v = Math.round((c - 1) * 100); contrastLabel.textContent = (v > 0 ? '+' : '') + v; }
 function setContrast(c) { userContrast = c; updateContrastUI(c); video.style.filter = currentFilm.liveFilter + ` contrast(${userContrast})`; }
 contrastSlider.addEventListener('input', () => setContrast(parseFloat(contrastSlider.value)));
 
@@ -493,7 +504,6 @@ function captureFrame(film, sourceImg = null, isPreviewMode = false){
 
 function triggerFlash(){ flashOverlay.style.transition='opacity 0.04s ease-in';flashOverlay.style.opacity='.9'; setTimeout(()=>{flashOverlay.style.transition='opacity 0.4s ease-out';flashOverlay.style.opacity='0';},70); }
 
-// ── FIX TUYỆT ĐỐI: LƯU ẢNH ÉP TẢI XUỐNG NGẦM (SILENT DOWNLOAD), KHÔNG GỌI HÀM SHARE ──
 async function savePhoto(blob,filename){
     const url = URL.createObjectURL(blob); 
     const a = document.createElement('a'); 
