@@ -68,7 +68,7 @@
             letter-spacing:0.5px; transition:all 0.15s; display:flex; align-items:center; gap:5px;
             min-height: 36px; flex-shrink: 0; font-weight: bold;
         }
-        .mode-btn.icon-only { padding: 5px 10px; } /* Nhỏ gọn cho Grid & Flash */
+        .mode-btn.icon-only { padding: 5px 10px; }
         .mode-btn.active { border-color:#ffaa00; color:#ffaa00; background:#1e1800; }
         .mode-btn svg { width:14px; height:14px; display: block; }
         
@@ -85,10 +85,7 @@
         #preview { display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:2; }
         #flash-overlay { position:absolute; inset:0; background:white; opacity:0; z-index:10; pointer-events:none; }
 
-        .viewfinder::before,.viewfinder::after,.vf-br::before,.vf-br::after {
-            content:''; position:absolute; width:18px; height:18px;
-            border-color:rgba(255,255,255,0.3); border-style:solid; z-index:5;
-        }
+        .viewfinder::before,.viewfinder::after,.vf-br::before,.vf-br::after { content:''; position:absolute; width:18px; height:18px; border-color:rgba(255,255,255,0.3); border-style:solid; z-index:5; }
         .viewfinder::before { top:8px; left:8px; border-width:2px 0 0 2px; }
         .viewfinder::after  { top:8px; right:8px; border-width:2px 2px 0 0; }
         .vf-br::before { bottom:8px; left:8px; border-width:0 0 2px 2px; }
@@ -194,7 +191,6 @@
         <button class="mode-btn icon-only" id="flash-btn" title="Flash">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </button>
-        
         <button class="mode-btn" id="timer-btn" data-mode="timer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span id="timer-val">OFF</span>
@@ -308,7 +304,35 @@ const infoBtn = document.getElementById('info-btn'), infoOverlay = document.getE
 infoBtn.addEventListener('click', () => infoOverlay.classList.add('open')); infoClose.addEventListener('click', () => infoOverlay.classList.remove('open'));
 
 let photoCount=0, isReviewing=false, activeStream=null, facingMode='environment', currentZoom=1, zoomTrack=null, photoRoll=[], viewerIdx=0, currentFilm=FILMS[0], shootMode='single', isShooting=false, showGrid=false, flashOn=false, currentImportedImageSource=null, isRecordingVideo=false, mediaRecorder=null, recordedChunks=[], videoRenderLoopId=null;
-let timerValue = 0; // Quản lý luồng vòng xoay Đồng hồ
+
+// ── LOGIC MỚI CHO THANH ĐIỀU HƯỚNG RÚT GỌN ──
+const timerBtn = document.getElementById('timer-btn');
+const timerVal = document.getElementById('timer-val');
+let timerValue = 0;
+
+document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        if(isRecordingVideo) return;
+
+        if (btn.id === 'timer-btn') {
+            if(timerValue === 0) timerValue = 3;
+            else if(timerValue === 3) timerValue = 10;
+            else timerValue = 0;
+            timerVal.textContent = timerValue === 0 ? 'OFF' : timerValue + 's';
+            if (timerValue === 0) { document.querySelector('[data-mode="single"]').click(); return; } 
+            else { shootMode = `timer${timerValue}`; }
+        } else {
+            timerValue = 0; timerVal.textContent = 'OFF'; timerBtn.classList.remove('active');
+            shootMode = btn.dataset.mode;
+        }
+
+        document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(b => b.classList.remove('active'));
+        if (timerValue > 0) timerBtn.classList.add('active'); else btn.classList.add('active');
+
+        shutterDot.style.background = (shootMode === 'video') ? 'radial-gradient(circle at 38% 35%,#ff4444,#aa0000)' : (shootMode.startsWith('timer') ? 'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)' : 'radial-gradient(circle at 38% 35%,#ff6655,#cc1100)');
+        statusEl.textContent = (timerValue > 0) ? `TIMER ${timerValue}S` : btn.textContent.trim().toUpperCase();
+    });
+});
 
 let audioCtx = null;
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -348,50 +372,6 @@ zoomSlider.addEventListener('input',()=>setZoom(parseFloat(zoomSlider.value))); 
 gridBtn.addEventListener('click',()=>{ showGrid=!showGrid; gridOverlay.classList.toggle('show',showGrid); gridBtn.classList.toggle('active',showGrid); statusEl.textContent = showGrid ? 'GRID ON' : 'GRID OFF'; });
 flipBtn.addEventListener('click',()=>{ facingMode=facingMode==='environment'?'user':'environment'; initCamera(facingMode); video.classList.toggle('mirrored',facingMode==='user'); });
 
-// ── LOGIC MỚI CHO THANH ĐIỀU HƯỚNG RÚT GỌN ──
-const timerBtn = document.getElementById('timer-btn');
-const timerVal = document.getElementById('timer-val');
-
-document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-        if(isRecordingVideo) return;
-
-        // Cơ chế bấm một nút để xoay vòng Timer
-        if (btn.id === 'timer-btn') {
-            if(timerValue === 0) timerValue = 3;
-            else if(timerValue === 3) timerValue = 10;
-            else timerValue = 0;
-
-            timerVal.textContent = timerValue === 0 ? 'OFF' : timerValue + 's';
-
-            if (timerValue === 0) {
-                // Tắt timer -> Ép bật lại nút SINGLE
-                document.querySelector('[data-mode="single"]').click();
-                return;
-            } else {
-                shootMode = `timer${timerValue}`;
-            }
-        } else {
-            // Đang bấm vào SINGLE hoặc VIDEO -> Reset trắng Timer
-            timerValue = 0;
-            timerVal.textContent = 'OFF';
-            timerBtn.classList.remove('active');
-            shootMode = btn.dataset.mode;
-        }
-
-        // Đổi màu thanh công cụ
-        document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(b => b.classList.remove('active'));
-        if (timerValue > 0) {
-            timerBtn.classList.add('active');
-        } else {
-            btn.classList.add('active');
-        }
-
-        shutterDot.style.background = (shootMode === 'video') ? 'radial-gradient(circle at 38% 35%,#ff4444,#aa0000)' : (shootMode.startsWith('timer') ? 'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)' : 'radial-gradient(circle at 38% 35%,#ff6655,#cc1100)');
-        statusEl.textContent = (timerValue > 0) ? `TIMER ${timerValue}S` : btn.textContent.trim().toUpperCase();
-    });
-});
-
 function drawSample(c) {
     const cx=c.getContext('2d'),w=c.width,h=c.height; const g=cx.createLinearGradient(0,0,w,h);
     g.addColorStop(0,'#c87941');g.addColorStop(0.3,'#8db36a');g.addColorStop(0.6,'#4a7ba8');g.addColorStop(1,'#2a3a5a');
@@ -426,14 +406,9 @@ try {
                     const {url} = await captureFrame(currentFilm, currentImportedImageSource);
                     preview.src = url;
                     statusEl.textContent = 'CHOOSE FILTER OR TAP SHUTTER TO SAVE';
-                } catch(e) {
-                    statusEl.textContent = 'RENDER ERROR';
-                } finally {
-                    isShooting = false; captureBtn.disabled = false;
-                }
-            } else {
-                statusEl.textContent = film.name.toUpperCase();
-            }
+                } catch(e) { statusEl.textContent = 'RENDER ERROR'; } 
+                finally { isShooting = false; captureBtn.disabled = false; }
+            } else { statusEl.textContent = film.name.toUpperCase(); }
         });
     });
 } catch(e) { console.error(e); }
@@ -449,47 +424,29 @@ function applyPolaroidBorder(w,h){ const t=Math.floor(w*.05),bot=Math.floor(w*.1
 function drawDateStamp(w,h,film){ const now=new Date(); const s=`'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`; const fs=Math.floor(w*.042); ctx.font=`bold ${fs}px "Courier New",monospace`; ctx.fillStyle=film.stampColor;ctx.shadowColor=film.stampShadow;ctx.shadowBlur=fs*.3; const tw=ctx.measureText(s).width; ctx.fillText(s,w-tw-w*.04,film.border?h-w*.18-h*.02:h-h*.04); ctx.shadowBlur=0; }
 function drawWatermark(w,h) { const txt = "SHOT ON RETRO CAM"; const fs = Math.floor(w * 0.022); ctx.font = `bold ${fs}px "Courier New",monospace`; ctx.fillStyle = "rgba(255, 255, 255, 0.45)"; ctx.fillText(txt, w * 0.04, h - h * 0.04); }
 
-// ── ENGINE XỬ LÝ ẢNH CORE CÓ DOWNSCALER (CHỐNG TRÀN RAM 100%) ──
+// ── ENGINE XỬ LÝ ẢNH CORE CÓ DOWNSCALER ──
 function captureFrame(film, sourceImg = null){
     return new Promise((resolve, reject) => {
         try {
-            const MAX_DIM = 1440; // Giới hạn kích thước ảnh xuất ra để xử lý mượt
+            const MAX_DIM = 1440; 
             let cw = 1280, ch = 720;
             
-            if (sourceImg) {
-                cw = sourceImg.naturalWidth || 1280; ch = sourceImg.naturalHeight || 720;
-            } else if (video.videoWidth) {
-                cw = video.videoWidth; ch = video.videoHeight;
-            }
+            if (sourceImg) { cw = sourceImg.naturalWidth || 1280; ch = sourceImg.naturalHeight || 720; } 
+            else if (video.videoWidth) { cw = video.videoWidth; ch = video.videoHeight; }
 
-            if (cw > MAX_DIM || ch > MAX_DIM) {
-                const ratio = Math.min(MAX_DIM / cw, MAX_DIM / ch);
-                cw = Math.round(cw * ratio); ch = Math.round(ch * ratio);
-            }
+            if (cw > MAX_DIM || ch > MAX_DIM) { const ratio = Math.min(MAX_DIM / cw, MAX_DIM / ch); cw = Math.round(cw * ratio); ch = Math.round(ch * ratio); }
 
-            canvas.width = cw; canvas.height = ch;
-            ctx.filter = 'none';
-            if (sourceImg) {
-                ctx.drawImage(sourceImg, 0, 0, cw, ch);
-            } else {
-                if(facingMode==='user'){ctx.save();ctx.translate(cw,0);ctx.scale(-1,1);ctx.drawImage(video,0,0,cw,ch);ctx.restore();}
-                else ctx.drawImage(video,0,0,cw,ch);
-            }
+            canvas.width = cw; canvas.height = ch; ctx.filter = 'none';
+            if (sourceImg) { ctx.drawImage(sourceImg, 0, 0, cw, ch); } 
+            else { if(facingMode==='user'){ctx.save();ctx.translate(cw,0);ctx.scale(-1,1);ctx.drawImage(video,0,0,cw,ch);ctx.restore();} else ctx.drawImage(video,0,0,cw,ch); }
             
             const id=ctx.getImageData(0,0,cw,ch),d=id.data;
             if(film.id==='ilford') applyBW(d); else applyGrade(d,film);
-            if(LUTS[film.curve]) applyCurve(d,LUTS[film.curve]); 
-            applyGrain(d,film.grain);
-            ctx.putImageData(id,0,0);
-            applyHalation(cw,ch,film.halation); applyVignette(cw,ch,film);
-            if(film.border) applyPolaroidBorder(cw,ch);
-            
+            if(LUTS[film.curve]) applyCurve(d,LUTS[film.curve]); applyGrain(d,film.grain); ctx.putImageData(id,0,0);
+            applyHalation(cw,ch,film.halation); applyVignette(cw,ch,film); if(film.border) applyPolaroidBorder(cw,ch);
             drawDateStamp(cw,ch,film); drawWatermark(cw,ch);
             
-            canvas.toBlob(blob => {
-                if(!blob) return reject("Blob error");
-                resolve({blob, url:URL.createObjectURL(blob)});
-            }, 'image/jpeg', 0.90);
+            canvas.toBlob(blob => { if(!blob) return reject("Blob error"); resolve({blob, url:URL.createObjectURL(blob)}); }, 'image/jpeg', 0.90);
         } catch(e) { reject(e); }
     });
 }
@@ -502,70 +459,78 @@ async function savePhoto(blob,filename){
     const url=URL.createObjectURL(blob); const a=document.createElement('a');a.href=url;a.download=filename; document.body.appendChild(a);a.click();document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-// ── LOGIC IMPORT FILE THƯ VIỆN CHUẨN UX (ĐÃ FIX) ──
-importBtn.addEventListener('click', () => {
-    if(isShooting || isRecordingVideo) return;
-    importInput.click();
-});
-
+importBtn.addEventListener('click', () => { if(isShooting || isRecordingVideo) return; importInput.click(); });
 importInput.addEventListener('change', (e) => {
     const file = e.target.files[0]; if(!file) return;
-    statusEl.textContent = 'LOADING IMAGE...';
-    isShooting = true; captureBtn.disabled = true;
-    
+    statusEl.textContent = 'LOADING IMAGE...'; isShooting = true; captureBtn.disabled = true;
     const img = new Image();
     img.onload = async () => {
-        currentImportedImageSource = img;
-        isReviewing = true;
+        currentImportedImageSource = img; isReviewing = true;
         shutterDot.style.background = 'radial-gradient(circle at 38% 35%, #ffcc44, #ff8800)';
-        
-        try {
-            statusEl.textContent = 'APPLYING FILTER...';
-            const {url} = await captureFrame(currentFilm, currentImportedImageSource);
-            preview.src = url; preview.style.display = 'block';
-            statusEl.textContent = 'CHOOSE FILTER OR TAP SHUTTER TO SAVE';
-        } catch(err) {
-            statusEl.textContent = 'PROCESS ERROR';
-        } finally {
-            isShooting = false; captureBtn.disabled = false;
-        }
+        try { statusEl.textContent = 'APPLYING FILTER...'; const {url} = await captureFrame(currentFilm, currentImportedImageSource); preview.src = url; preview.style.display = 'block'; statusEl.textContent = 'CHOOSE FILTER OR TAP SHUTTER TO SAVE'; } 
+        catch(err) { statusEl.textContent = 'PROCESS ERROR'; } 
+        finally { isShooting = false; captureBtn.disabled = false; }
     };
     img.onerror = () => { statusEl.textContent = 'IMAGE ERROR'; isShooting = false; captureBtn.disabled = false; };
     img.src = URL.createObjectURL(file);
 });
 
-// ── TÍNH NĂNG QUAY VIDEO RETRO MODE LUỒNG CAO CẤP ──
-function runVideoRenderLoop() {
+
+// ── TÍNH NĂNG QUAY VIDEO RETRO MODE LUỒNG CAO CẤP (ĐÃ TỐI ƯU SIÊU NHẸ) ──
+let lastFrameTime = 0;
+const TARGET_FPS = 24; // Chuẩn điện ảnh giúp giảm tải 60% CPU
+const frameInterval = 1000 / TARGET_FPS;
+
+function runVideoRenderLoop(timestamp) {
     if(!isRecordingVideo) return;
-    canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
-    ctx.filter = currentFilm.liveFilter;
-    if(facingMode === 'user') { ctx.save(); ctx.translate(canvas.width, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0, canvas.width, canvas.height); ctx.restore(); }
-    else { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); }
-    ctx.filter = 'none';
-    const now = new Date(); const s = `'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
-    ctx.font = `bold ${Math.floor(canvas.width * 0.042)}px "Courier New",monospace`; ctx.fillStyle = currentFilm.stampColor;
-    ctx.fillText(s, canvas.width - ctx.measureText(s).width - (canvas.width*0.04), canvas.height - (canvas.height*0.04));
     videoRenderLoopId = requestAnimationFrame(runVideoRenderLoop);
+
+    if (timestamp - lastFrameTime < frameInterval) return;
+    lastFrameTime = timestamp;
+
+    const MAX_VID_WIDTH = 720;
+    let vw = video.videoWidth || 640, vh = video.videoHeight || 480;
+    if (vw > MAX_VID_WIDTH) { const ratio = MAX_VID_WIDTH / vw; vw = MAX_VID_WIDTH; vh = Math.round(vh * ratio); }
+
+    canvas.width = vw; canvas.height = vh;
+    ctx.filter = currentFilm.liveFilter;
+    if(facingMode === 'user') { ctx.save(); ctx.translate(vw, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0, vw, vh); ctx.restore(); }
+    else { ctx.drawImage(video, 0, 0, vw, vh); }
+    ctx.filter = 'none';
+    
+    const now = new Date(); const s = `'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
+    ctx.font = `bold ${Math.floor(vw * 0.042)}px "Courier New",monospace`; ctx.fillStyle = currentFilm.stampColor;
+    ctx.fillText(s, vw - ctx.measureText(s).width - (vw*0.04), vh - (vh*0.04));
 }
 
 async function startVideoRecording() {
     try {
         isShooting = true; isRecordingVideo = true; captureBtn.classList.add('recording'); statusEl.textContent = '• RECORDING RETRO VIDEO...'; playShutterSound();
-        canvas.width = video.videoWidth || 640; canvas.height = video.videoHeight || 480;
-        runVideoRenderLoop();
-        const stream = canvas.captureStream(25); recordedChunks = []; mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
+        lastFrameTime = performance.now(); runVideoRenderLoop(performance.now());
+        const stream = canvas.captureStream(TARGET_FPS); recordedChunks = []; 
+        
+        let options = {};
+        if (MediaRecorder.isTypeSupported('video/mp4')) { options = { mimeType: 'video/mp4' }; } 
+        else if (MediaRecorder.isTypeSupported('video/webm; codecs=h264')) { options = { mimeType: 'video/webm; codecs=h264' }; } 
+        else { options = { mimeType: 'video/webm' }; }
+
+        mediaRecorder = new MediaRecorder(stream, options);
         mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) recordedChunks.push(e.data); };
         mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' }); const filename = `VIDEO_${currentFilm.short}_${Date.now()}.webm`; const url = URL.createObjectURL(blob);
+            const blob = new Blob(recordedChunks, { type: options.mimeType || 'video/webm' }); 
+            const ext = (options.mimeType && options.mimeType.includes('mp4')) ? 'mp4' : 'webm';
+            const filename = `VIDEO_${currentFilm.short}_${Date.now()}.${ext}`; 
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a);
             statusEl.textContent = '✓ VIDEO SAVED'; playWindingSound(); isShooting = false; isRecordingVideo = false; captureBtn.classList.remove('recording');
         };
-        mediaRecorder.start();
+        mediaRecorder.start(100); 
     } catch(err) { isShooting = false; isRecordingVideo = false; captureBtn.classList.remove('recording'); statusEl.textContent = 'RECORDING ERROR'; }
 }
 function stopVideoRecording() { if(mediaRecorder && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); cancelAnimationFrame(videoRenderLoopId); } }
 
-// ── ĐIỀU HƯỚNG SỰ KIỆN NÚT CỬA TRẬP (SHUTTER ROUTER BUTTON) ──
+
+// ── ĐIỀU HƯỚNG SỰ KIỆN NÚT CỬA TRẬP ──
 captureBtn.addEventListener('click', async function(){
     if(isReviewing && currentImportedImageSource) {
         isShooting = true; captureBtn.disabled = true; statusEl.textContent = 'SAVING IMPORTED PHOTO...';
