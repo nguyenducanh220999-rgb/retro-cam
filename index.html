@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Retro Camera Premium Studio</title>
+    <title>Retro Camera Premium v2.0</title>
     <style>
         /* ── CSS RESET & HYBRID WEBVIEW OPTIMIZATIONS ── */
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -33,7 +33,7 @@
         #cancel-import-btn { display:none; background: linear-gradient(to bottom, #d42222, #a00000); color: #fff; border: 1px solid #660000; padding: 5px 12px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; font-family: inherit; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.3); text-shadow: 0 1px 1px rgba(0,0,0,0.8); }
         #cancel-import-btn:active { background: #aa0000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); transform: translateY(1px); }
 
-        /* ── Mode bar (Đã Rút Gọn) ── */
+        /* ── Mode bar ── */
         .mode-bar { display:flex; gap:8px; justify-content:center; align-items:center; flex-shrink:0; }
         .mode-btn { font-size:10px; padding:6px 14px; border-radius:20px; cursor:pointer; border:1.5px solid #2a2a2a; background: linear-gradient(to bottom, #1e1e1e, #111); color:#777; letter-spacing:0.5px; transition:all 0.15s; display:flex; align-items:center; gap:6px; min-height: 38px; flex-shrink: 0; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         .mode-btn.icon-only { padding: 6px 12px; }
@@ -86,7 +86,6 @@
         /* ── CỤM NÚT BOTTOM BAR SKEUOMORPHIC 3D ── */
         .bottom-bar { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:4px 10px; gap:8px; }
 
-        /* Nút phụ: Nhôm xước tối màu, dập chìm icon */
         .btn-flip, .btn-import, .btn-gallery { 
             width:52px; height:52px; border-radius:50%; 
             background: linear-gradient(145deg, #3a3a3a 0%, #1a1a1a 100%); 
@@ -106,7 +105,6 @@
             filter: drop-shadow(0 -1px 1px rgba(0,0,0,0.9)) drop-shadow(0 1px 0 rgba(255,255,255,0.1)); 
         }
 
-        /* Nút Gallery Ống Kính */
         .btn-gallery { overflow: hidden; padding: 2px; }
         .gallery-inner-lens {
             width: 100%; height: 100%; border-radius: 50%; background: #000;
@@ -127,44 +125,20 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.4); border: 1px solid #550000; z-index: 20;
         }
 
-        /* Nút SHUTTER VẬT LÝ SIÊU THỰC */
         .shutter-btn { 
             width: 78px; height: 78px; border-radius: 50%; cursor: pointer; 
-            background: linear-gradient(145deg, #e6e6e6 0%, #999999 100%); 
-            border: none;
-            box-shadow: 
-                inset 0 2px 4px rgba(255,255,255,0.9), 
-                inset 0 -2px 6px rgba(0,0,0,0.5), 
-                0 6px 14px rgba(0,0,0,0.8), 
-                0 0 0 4px #1a1a1a,
-                0 0 0 6px #333; 
-            transition: all 0.1s ease; 
-            display: flex; align-items: center; justify-content: center; 
+            background: linear-gradient(145deg, #e6e6e6 0%, #999999 100%); border: none;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.9), inset 0 -2px 6px rgba(0,0,0,0.5), 0 6px 14px rgba(0,0,0,0.8), 0 0 0 4px #1a1a1a, 0 0 0 6px #333; 
+            transition: all 0.1s ease; display: flex; align-items: center; justify-content: center; 
         }
-        .shutter-btn:active { 
-            box-shadow: 
-                inset 0 2px 4px rgba(255,255,255,0.9), 
-                inset 0 4px 8px rgba(0,0,0,0.6), 
-                0 2px 4px rgba(0,0,0,0.8), 
-                0 0 0 4px #1a1a1a,
-                0 0 0 6px #333;  
-            transform: translateY(4px); 
-        }
+        .shutter-btn:active { box-shadow: inset 0 2px 4px rgba(255,255,255,0.9), inset 0 4px 8px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.8), 0 0 0 4px #1a1a1a, 0 0 0 6px #333; transform: translateY(4px); }
         .shutter-btn:disabled { opacity: 0.5; transform: none; box-shadow: none; filter: grayscale(1); }
-        .shutter-dot { 
-            width: 24px; height: 24px; border-radius: 50%; 
-            background: radial-gradient(circle at 35% 35%, #ff7766 0%, #cc0000 60%, #550000 100%); 
-            box-shadow: 
-                inset 0 2px 4px rgba(255,255,255,0.5), 
-                0 3px 6px rgba(0,0,0,0.6),
-                0 0 8px rgba(200,0,0,0.4); 
-            transition: all 0.2s; 
-        }
+        .shutter-dot { width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff7766 0%, #cc0000 60%, #550000 100%); box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), 0 3px 6px rgba(0,0,0,0.6), 0 0 8px rgba(200,0,0,0.4); transition: all 0.2s; }
 
         #status { font-size:10px; color:#555; text-align:center; flex-shrink:0; letter-spacing:1.5px; min-height:14px; margin-bottom: 2px; font-weight: bold; }
         .app-copyright { font-size: 8px; color: #4a4a4a; text-align: center; letter-spacing: 0.8px; font-weight: bold; opacity: 0.8; margin-top: -2px; }
 
-        /* ══ OVERLAYS MẶC ĐỊNH ══ */
+        /* Overlays */
         #gallery-overlay { display:none; position:fixed; inset:0; background:#000; z-index:100; flex-direction:column; }
         #gallery-overlay.open { display:flex; }
         .gallery-header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; border-bottom:1px solid #1e1e1e; padding-top: calc(env(safe-area-inset-top, 0px) + 14px); }
@@ -256,18 +230,15 @@
                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
             </svg>
         </button>
-
         <button class="btn-import" id="import-btn" title="Import Photo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
         </button>
         <input type="file" id="import-input" accept="image/*" style="display: none;">
-
-        <button class="shutter-btn" id="capture-btn" title="Shutter">
-            <div class="shutter-dot" id="shutter-dot"></div>
-        </button>
-
+        
+        <button class="shutter-btn" id="capture-btn" title="Shutter"><div class="shutter-dot" id="shutter-dot"></div></button>
+        
         <button class="btn-gallery" id="gallery-btn" title="Gallery">
             <div class="gallery-inner-lens">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -308,25 +279,26 @@
 
 <div id="info-overlay">
     <div class="info-box">
-        <h3>RETRO CAMERA</h3><p class="version">Version 1.0.0 Premium</p><hr>
+        <h3>RETRO CAMERA</h3><p class="version">Version 2.0.0 Premium</p><hr>
         <p class="copyright">© 2026 GamHub.Store.<br>All rights reserved.</p>
         <button id="info-close">CLOSE</button>
     </div>
 </div>
 
 <script>
-// ── DATA PRESETS ──
+// ── DATA PRESETS (SỬA LỖI PHÂN LOẠI Y2K) ──
 const FILMS = [
     { id:'kodak_gold',  name:'Kodak Gold 200',  short:'KG200', liveFilter:'saturate(1.1) sepia(0.18) brightness(1.05) contrast(1.05)',      grade:{rMul:1.12,gMul:1.04,bMul:0.82,rLift:14,gLift:10,bLift:8},  colorCast:null,             curve:'soft_s',  grain:28, vignetteInner:0.28,vignetteOuter:0.78,vignetteAlpha:0.60, border:false, halation:{r:255,g:80,b:20,strength:0.06},    stampColor:'#ff6600',stampShadow:'#cc2200', rollColor:'#e29e00', labelColor:'#bf0603', labelText:'KODAK' },
     { id:'kodak_portra',name:'Kodak Portra 400', short:'P400',   liveFilter:'saturate(0.88) brightness(1.08) contrast(0.92) hue-rotate(5deg)', grade:{rMul:1.06,gMul:1.03,bMul:0.96,rLift:18,gLift:14,bLift:12}, colorCast:null,             curve:'flat',    grain:18, vignetteInner:0.32,vignetteOuter:0.82,vignetteAlpha:0.45, border:false, halation:{r:255,g:120,b:80,strength:0.05},  stampColor:'#ff8833',stampShadow:'#aa3300', rollColor:'#cccccc', labelColor:'#2b2d42', labelText:'PORTRA' },
     { id:'kodak_ultra', name:'Kodak Ultramax',   short:'UMX',   liveFilter:'saturate(1.25) contrast(1.1) brightness(1.02) hue-rotate(-5deg)', grade:{rMul:1.18,gMul:1.00,bMul:0.78,rLift:10,gLift:8,bLift:14},  colorCast:null,             curve:'punchy_s',grain:32, vignetteInner:0.25,vignetteOuter:0.72,vignetteAlpha:0.65, border:false, halation:{r:255,g:60,b:10,strength:0.08},   stampColor:'#ff4400',stampShadow:'#881100', rollColor:'#00509d', labelColor:'#fd9e02', labelText:'ULTRA' },
-    { id:'fuji_sup',    name:'Fuji Superia 400', short:'FSP',   liveFilter:'saturate(1.05) hue-rotate(15deg) brightness(1.03) contrast(1.05)',grade:{rMul:0.98,gMul:1.08,bMul:1.02,rLift:10,gLift:12,bLift:14}, colorCast:null,             curve:'soft_s',  grain:22, vignetteInner:0.30,vignetteOuter:0.80,vignetteAlpha:0.50, border:false, halation:{r:80,g:200,b:120,strength:0.04},  stampColor:'#00dd66',stampShadow:'#006622', rollColor:'#007200', labelColor:'#ccff00', labelText:'FUJI' },
-    { id:'fuji_vel',    name:'Fuji Velvia 50',   short:'VLV',   liveFilter:'saturate(1.5) contrast(1.18) brightness(0.97)',                    grade:{rMul:1.10,gMul:1.06,bMul:1.14,rLift:4,gLift:4,bLift:6},    colorCast:null,             curve:'punchy_s',grain:12, vignetteInner:0.22,vignetteOuter:0.70,vignetteAlpha:0.70, border:false, halation:{r:200,g:60,b:200,strength:0.04},  stampColor:'#ff33cc',stampShadow:'#aa0066', rollColor:'#3c096c', labelColor:'#ff007f', labelText:'VELVIA' },
-    { id:'fuji_pro',    name:'Fuji Pro 400H',    short:'P4H',   liveFilter:'saturate(0.80) brightness(1.12) contrast(0.88) hue-rotate(10deg)',grade:{rMul:0.97,gMul:1.05,bMul:1.08,rLift:20,gLift:18,bLift:16}, colorCast:null,             curve:'flat',    grain:16, vignetteInner:0.35,vignetteOuter:0.85,vignetteAlpha:0.38, border:false, halation:{r:100,g:180,b:255,strength:0.04}, stampColor:'#44aaff',stampShadow:'#002288', rollColor:'#00b4d8', labelColor:'#0077b6', labelText:'PRO-H' },
+    { id:'fuji_sup',    name:'Fuji Superia 400', short:'FSP',   fuji:true, liveFilter:'saturate(1.05) hue-rotate(15deg) brightness(1.03) contrast(1.05)',grade:{rMul:0.98,gMul:1.08,bMul:1.02,rLift:10,gLift:12,bLift:14}, colorCast:null,             curve:'soft_s',  grain:22, vignetteInner:0.30,vignetteOuter:0.80,vignetteAlpha:0.50, border:false, halation:{r:80,g:200,b:120,strength:0.04},  stampColor:'#00dd66',stampShadow:'#006622', rollColor:'#007200', labelColor:'#ccff00', labelText:'FUJI' },
+    { id:'fuji_vel',    name:'Fuji Velvia 50',   short:'VLV',   fuji:true, liveFilter:'saturate(1.5) contrast(1.18) brightness(0.97)',                    grade:{rMul:1.10,gMul:1.06,bMul:1.14,rLift:4,gLift:4,bLift:6},    colorCast:null,             curve:'punchy_s',grain:12, vignetteInner:0.22,vignetteOuter:0.70,vignetteAlpha:0.70, border:false, halation:{r:200,g:60,b:200,strength:0.04},  stampColor:'#ff33cc',stampShadow:'#aa0066', rollColor:'#3c096c', labelColor:'#ff007f', labelText:'VELVIA' },
+    { id:'fuji_pro',    name:'Fuji Pro 400H',    short:'P4H',   fuji:true, liveFilter:'saturate(0.80) brightness(1.12) contrast(0.88) hue-rotate(10deg)',grade:{rMul:0.97,gMul:1.05,bMul:1.08,rLift:20,gLift:18,bLift:16}, colorCast:null,             curve:'flat',    grain:16, vignetteInner:0.35,vignetteOuter:0.85,vignetteAlpha:0.38, border:false, halation:{r:100,g:180,b:255,strength:0.04}, stampColor:'#44aaff',stampShadow:'#002288', rollColor:'#00b4d8', labelColor:'#0077b6', labelText:'PRO-H' },
     { id:'lomo',        name:'Lomo 800',         short:'LOM',   liveFilter:'saturate(1.4) contrast(1.2) brightness(0.95)',                     grade:{rMul:1.20,gMul:0.95,bMul:1.10,rLift:6,gLift:4,bLift:8},    colorCast:null,             curve:'punchy_s',grain:48, vignetteInner:0.18,vignetteOuter:0.62,vignetteAlpha:0.80, border:false, halation:{r:255,g:30,b:180,strength:0.07},  stampColor:'#ff2288',stampShadow:'#880033', rollColor:'#ff0054', labelColor:'#9e0059', labelText:'LOMO' },
     { id:'polaroid',    name:'Polaroid 600',     short:'POL',   liveFilter:'saturate(0.75) brightness(1.10) contrast(0.85) hue-rotate(-8deg)',grade:{rMul:1.02,gMul:1.00,bMul:1.05,rLift:24,gLift:22,bLift:20}, colorCast:null,             curve:'flat',    grain:14, vignetteInner:0.40,vignetteOuter:0.90,vignetteAlpha:0.30, border:true,  halation:{r:200,g:200,b:255,strength:0.04}, stampColor:'#aabbff',stampShadow:'#334488', rollColor:'#ffffff', labelColor:'#111111', labelText:'POLA' },
     { id:'agfa',        name:'Agfa Vista 200',   short:'AGF',   liveFilter:'saturate(1.15) hue-rotate(-10deg) brightness(1.04) contrast(1.08)',grade:{rMul:1.14,gMul:1.02,bMul:0.86,rLift:12,gLift:9,bLift:6}, colorCast:null,             curve:'soft_s',  grain:24, vignetteInner:0.27,vignetteOuter:0.75,vignetteAlpha:0.55, border:false, halation:{r:255,g:100,b:0,strength:0.06},   stampColor:'#ff9900',stampShadow:'#993300', rollColor:'#d90429', labelColor:'#ef233c', labelText:'AGFA' },
-    { id:'ilford',      name:'Ilford HP5',       short:'B&W',   liveFilter:'grayscale(1) contrast(1.1) brightness(1.02)',                    grade:null,                                                                                colorCast:null,             curve:'bw_s',    grain:38, vignetteInner:0.24,vignetteOuter:0.74,vignetteAlpha:0.68, border:false, halation:null,                               stampColor:'#ffaa00',stampShadow:'#cc2200', rollColor:'#222222', labelColor:'#666666', labelText:'HP5' }
+    { id:'ilford',      name:'Ilford HP5',       short:'B&W',   liveFilter:'grayscale(1) contrast(1.1) brightness(1.02)',                    grade:null,                                                                                colorCast:null,             curve:'bw_s',    grain:38, vignetteInner:0.24,vignetteOuter:0.74,vignetteAlpha:0.68, border:false, halation:null,                               stampColor:'#ffaa00',stampShadow:'#cc2200', rollColor:'#222222', labelColor:'#666666', labelText:'HP5' },
+    { id:'y2k_digicam', name:'Y2K CyberShot',    short:'Y2K',   digital:true, liveFilter:'contrast(1.22) saturate(1.35) brightness(1.08) sepia(0.04)',           grade:{rMul:1.05,gMul:1.18,bMul:0.92,rLift:6,gLift:6,bLift:-4},  colorCast:null,              curve:'punchy_s',grain:10, vignetteInner:0.40,vignetteOuter:0.90,vignetteAlpha:0.20, border:false, halation:{r:0,g:255,b:200,strength:0.03},  stampColor:'#00ffcc',stampShadow:'#006655', rollColor:'#0077b6', labelColor:'#03045e', labelText:'CYBER' }
 ];
 
 function buildLUT(type) {
@@ -414,7 +386,19 @@ function drawSample(c) {
 
 try {
     FILMS.forEach((film, idx) => {
-        if(film.fuji && (idx > 0 && !FILMS[idx-1].fuji)){ const d = document.createElement('div'); d.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 2px;'; d.innerHTML = '<span style="font-size:9px;color:#4a9eff;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);font-weight:bold;">FUJI</span>'; filterStrip.appendChild(d); }
+        // Vạch phân cách nhãn FUJI
+        if(film.fuji && (idx === 0 || !FILMS[idx-1].fuji)){ 
+            const d = document.createElement('div'); d.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 2px;'; 
+            d.innerHTML = '<span style="font-size:9px;color:#4a9eff;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);font-weight:bold;">FUJI</span>'; 
+            filterStrip.appendChild(d); 
+        }
+        // Vạch phân cách nhãn DIGI (Máy kỹ thuật số/Y2K)
+        if(film.digital && (idx === 0 || !FILMS[idx-1].digital)){ 
+            const d = document.createElement('div'); d.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 2px;'; 
+            d.innerHTML = '<span style="font-size:9px;color:#00ffcc;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);font-weight:bold;text-shadow: 0 0 4px #00ffcc;">DIGI</span>'; 
+            filterStrip.appendChild(d); 
+        }
+
         const btn = document.createElement('div'); btn.className = 'filter-btn' + (idx === 0 ? ' active' : '');
         const th = document.createElement('div'); th.className = 'filter-thumb'; th.style.position = 'relative';
         const bgLayer = document.createElement('div'); bgLayer.style.cssText = `position: absolute; inset: 0; z-index: 1; background: linear-gradient(135deg, #c87941 0%, #8db36a 30%, #4a7ba8 60%, #2a3a5a 100%); filter: ${film.liveFilter};`;
@@ -423,25 +407,27 @@ try {
         const rollContainer = document.createElement('div'); rollContainer.style.cssText = 'position:absolute; inset:0; z-index:10; display:flex; align-items:center; justify-content:center; background:transparent; pointer-events:none;';
         rollContainer.innerHTML = `<svg viewBox="0 0 40 55" style="width: 24px; height: 34px; display:block;"><rect x="17" y="0" width="6" height="3" fill="#222" rx="0.5"/><path d="M10 3h20v2H10z" fill="#999"/><path d="M12 5h16v1H12z" fill="#666"/><rect x="7" y="6" width="26" height="42" rx="3" fill="${film.rollColor}"/><rect x="5" y="9" width="2" height="36" fill="#111" opacity="0.4"/><rect x="11" y="11" width="18" height="32" rx="1.5" fill="${film.labelColor}"/><text x="20" y="29" fill="#ffffff" font-family="monospace" font-size="6.5" font-weight="900" text-anchor="middle" transform="rotate(-90 20 29)" letter-spacing="0.5">${film.labelText}</text><path d="M10 48h20v2H10z" fill="#999"/><rect x="16" y="50" width="8" height="2" fill="#222" rx="0.5"/></svg>`;
         th.appendChild(rollContainer);
-        const lb = document.createElement('div'); lb.className = 'filter-label'; lb.innerHTML = film.fuji ? `<span style="color:#4a9eff">${film.short}</span>` : film.short;
+        
+        const lb = document.createElement('div'); lb.className = 'filter-label'; 
+        // Phân loại nhãn màu sắc cho cuộn phim
+        lb.innerHTML = film.fuji ? `<span style="color:#4a9eff">${film.short}</span>` : (film.digital ? `<span style="color:#00ffcc">${film.short}</span>` : film.short);
+        
         btn.appendChild(th); btn.appendChild(lb); filterStrip.appendChild(btn);
         
         btn.addEventListener('click', async () => {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active'); currentFilm = FILMS[idx];
-            filmNameEl.textContent = film.fuji ? `📷 ${film.name}` : film.name;
+            filmNameEl.textContent = (film.fuji || film.digital) ? `📷 ${film.name}` : film.name;
             video.style.filter = film.liveFilter;
             
-            if(currentImportedImageSource) {
-                if(isShooting) return;
-                isShooting = true; captureBtn.disabled = true;
-                statusEl.textContent = 'RENDERING FILTER...';
-                try {
-                    const {url} = await captureFrame(currentFilm, currentImportedImageSource, true);
-                    preview.src = url;
-                    statusEl.textContent = 'CHOOSE FILTER OR TAP SHUTTER TO SAVE';
-                } catch(e) { statusEl.textContent = 'RENDER ERROR'; } 
-                finally { isShooting = false; captureBtn.disabled = false; }
+            if(isReviewing && originalImportedImage && previewImportedImage) {
+                statusEl.textContent = 'APPLYING...';
+                setTimeout(async () => {
+                    try {
+                        const {url} = await captureFrame(currentFilm, previewImportedImage, true);
+                        preview.src = url; statusEl.textContent = 'TAP SHUTTER TO SAVE HIGH-RES';
+                    } catch(e) {}
+                }, 10);
             } else { statusEl.textContent = film.name.toUpperCase(); }
         });
     });
@@ -456,63 +442,57 @@ function applyHalation(w,h,hal){ if(!hal)return; const hx=ctx.createRadialGradie
 function applyVignette(w,h,film){ const vg=ctx.createRadialGradient(w/2,h/2,w*film.vignetteInner,w/2,h/2,w*film.vignetteOuter); vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,`rgba(0,0,0,${film.vignetteAlpha})`); ctx.fillStyle=vg;ctx.fillRect(0,0,w,h); }
 function applyPolaroidBorder(w,h){ const t=Math.floor(w*.05),bot=Math.floor(w*.18); ctx.fillStyle='#f5f0e8'; ctx.fillRect(0,0,w,t);ctx.fillRect(0,0,t,h);ctx.fillRect(w-t,0,t,h);ctx.fillRect(0,h-bot,w,bot); }
 
-// ── GIẢI PHÁP ĐÓNG DẤU NGÀY THÁNG 1000% SAFE FONT ──
+// ── GIẢI PHÁP ĐÓNG DẤU NGÀY THÁNG 1000% SAFE FONT v2.0 ──
 function drawDateStamp(w,h,film){
     const now=new Date();
     const s=`'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
-    
-    // Giảm size xuống một chút cho tinh tế (2.8% chiều rộng ảnh)
     const fs = Math.floor(w * 0.028); 
-    
-    // Sử dụng chuỗi Fallback cực mạnh để đảm bảo mọi thiết bị đều hiện đúng dạng chữ máy gõ (Typewriter)
     ctx.font = `bold ${fs}px "Courier New", Courier, "Lucida Console", monospace`; 
-    
-    // Đo kích thước để canh lề
     const tw = ctx.measureText(s).width; 
     const xPos = w - tw - w * 0.04;
     const yPos = film.border ? h - w * 0.18 - h * 0.02 : h - h * 0.04;
-
-    ctx.save();
-    // Bóp dẹt chữ nhẹ theo chiều ngang để mô phỏng LED in nhiệt của máy phim
-    ctx.scale(0.85, 1);
-    const scaledX = xPos / 0.85;
-
-    // Lớp 1: Phát sáng (Glow) nhòe màu đặc trưng của cuộn phim
-    ctx.fillStyle = film.stampColor || '#ff8800'; 
-    ctx.shadowColor = film.stampShadow || '#ff0000'; 
-    ctx.shadowBlur = fs * 0.5; 
-    ctx.fillText(s, scaledX, yPos);
-    
-    // Lớp 2: Lõi chữ in đè lên rõ nét (Hơi ám vàng cháy)
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#fff9e6'; 
-    ctx.fillText(s, scaledX, yPos);
-    
-    ctx.restore();
+    ctx.save(); ctx.scale(0.85, 1); const scaledX = xPos / 0.85;
+    ctx.fillStyle = film.stampColor || '#ff8800'; ctx.shadowColor = film.stampShadow || '#ff0000'; ctx.shadowBlur = fs * 0.5; ctx.fillText(s, scaledX, yPos);
+    ctx.shadowBlur = 0; ctx.fillStyle = '#fff9e6'; ctx.fillText(s, scaledX, yPos); ctx.restore();
 }
 
-function drawWatermark(w,h) { 
-    const txt = "SHOT ON RETRO CAM"; const fs = Math.floor(w * 0.022); 
-    ctx.font = `bold ${fs}px "Courier New", Courier, monospace`; 
-    ctx.fillStyle = "rgba(255, 255, 255, 0.45)"; 
-    ctx.shadowBlur = 0;
-    ctx.fillText(txt, w * 0.04, h - h * 0.04); 
-}
+function drawWatermark(w,h) { const txt = "SHOT ON RETRO CAM"; const fs = Math.floor(w * 0.022); ctx.font = `bold ${fs}px "Courier New", Courier, monospace`; ctx.fillStyle = "rgba(255, 255, 255, 0.45)"; ctx.shadowBlur = 0; ctx.fillText(txt, w * 0.04, h - h * 0.04); }
 
-// ── ENGINE XỬ LÝ ẢNH CORE CÓ DUAL-RENDER ──
+// ── ENGINE XỬ LÝ ẢNH CORE CÓ KIẾN TRÚC NHÀ NHÚNG PHẦN CỨNG IMAGE_CAPTURE v2.0 ──
 function captureFrame(film, sourceImg = null, isPreviewMode = false){
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         try {
             let cw = 1280, ch = 720;
-            if (sourceImg) { cw = sourceImg.width || sourceImg.naturalWidth; ch = sourceImg.height || sourceImg.naturalHeight; } 
-            else if (video.videoWidth) { cw = video.videoWidth; ch = video.videoHeight; }
+            let hardwareBitmap = null;
+
+            if (!sourceImg && zoomTrack && typeof ImageCapture !== 'undefined') {
+                try {
+                    const capturer = new ImageCapture(zoomTrack);
+                    hardwareBitmap = await capturer.grabFrame(); 
+                    cw = hardwareBitmap.width; ch = hardwareBitmap.height;
+                } catch(e) { hardwareBitmap = null; } 
+            }
+
+            if (sourceImg) {
+                cw = sourceImg.width || sourceImg.naturalWidth; ch = sourceImg.height || sourceImg.naturalHeight;
+            } else if (!hardwareBitmap && video.videoWidth) {
+                cw = video.videoWidth; ch = video.videoHeight;
+            }
 
             let MAX_DIM = isPreviewMode ? 800 : 3840; 
             if (cw > MAX_DIM || ch > MAX_DIM) { const ratio = Math.min(MAX_DIM / cw, MAX_DIM / ch); cw = Math.round(cw * ratio); ch = Math.round(ch * ratio); }
 
             canvas.width = cw; canvas.height = ch; ctx.filter = 'none';
-            if (sourceImg) { ctx.drawImage(sourceImg, 0, 0, cw, ch); } 
-            else { if(facingMode==='user'){ctx.save();ctx.translate(cw,0);ctx.scale(-1,1);ctx.drawImage(video,0,0,cw,ch);ctx.restore();} else ctx.drawImage(video,0,0,cw,ch); }
+            
+            if (sourceImg) { 
+                ctx.drawImage(sourceImg, 0, 0, cw, ch); 
+            } else if (hardwareBitmap) {
+                if(facingMode==='user'){ ctx.save(); ctx.translate(cw,0); ctx.scale(-1,1); ctx.drawImage(hardwareBitmap, 0, 0, cw, ch); ctx.restore(); }
+                else { ctx.drawImage(hardwareBitmap, 0, 0, cw, ch); }
+                hardwareBitmap.close(); 
+            } else { 
+                if(facingMode==='user'){ctx.save();ctx.translate(cw,0);ctx.scale(-1,1);ctx.drawImage(video, 0, 0, cw, ch);ctx.restore();} else ctx.drawImage(video, 0, 0, cw, ch); 
+            }
             
             const id=ctx.getImageData(0,0,cw,ch),d=id.data;
             if(film.id==='ilford') applyBW(d); else applyGrade(d,film);
@@ -533,17 +513,10 @@ async function savePhoto(blob,filename){
     const url=URL.createObjectURL(blob); const a=document.createElement('a');a.href=url;a.download=filename; document.body.appendChild(a);a.click();document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-// ── LOGIC IMPORT FILE THƯ VIỆN KÉP ──
-importBtn.addEventListener('click', () => {
-    if(isShooting) return;
-    if(navigator.vibrate) navigator.vibrate(35);
-    importInput.click();
-});
-
+importBtn.addEventListener('click', () => { if(isShooting) return; if(navigator.vibrate) navigator.vibrate(35); importInput.click(); });
 importInput.addEventListener('change', (e) => {
     const file = e.target.files[0]; if(!file) return;
     statusEl.textContent = 'LOADING IMAGE...'; isShooting = true; captureBtn.disabled = true;
-    
     const img = new Image();
     img.onload = async () => {
         originalImportedImage = img;
@@ -570,15 +543,13 @@ importInput.addEventListener('change', (e) => {
 });
 
 function cancelImportProcess() {
-    originalImportedImage = null; previewImportedImage = null;
-    preview.style.display = 'none'; isReviewing = false; importInput.value = '';
+    originalImportedImage = null; previewImportedImage = null; preview.style.display = 'none'; isReviewing = false; importInput.value = '';
     ledDisplay.style.display = 'block'; cancelImportBtn.style.display = 'none';
     shutterDot.style.background = (shootMode.startsWith('timer') ? 'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)' : 'radial-gradient(circle at 38% 35%,#ff6655,#cc1100)');
     statusEl.textContent = 'READY TO SHOOT';
 }
 cancelImportBtn.addEventListener('click', cancelImportProcess);
 
-// ── ĐIỀU HƯỚNG SỰ KIỆN NÚT CỬA TRẬP ──
 captureBtn.addEventListener('click', async function(){
     if(isReviewing && originalImportedImage) {
         if(navigator.vibrate) navigator.vibrate(40);
@@ -609,8 +580,7 @@ captureBtn.addEventListener('click', async function(){
     try {
         if(shootMode==='timer3'||shootMode==='timer10'){
             const secs = timerValue; statusEl.textContent=`TIMER ${secs}s...`;
-            await runTimer(secs); 
-            if(navigator.vibrate) navigator.vibrate(40);
+            await runTimer(secs); if(navigator.vibrate) navigator.vibrate(40);
             triggerFlash(); playShutterSound(); statusEl.textContent = 'PROCESSING...';
             const{blob,url}=await captureFrame(film); const filename=`${film.short}_${Date.now()}.jpg`;
             preview.src=url; preview.style.display='block'; isReviewing=true; photoCount++; counterEl.textContent=String(photoCount).padStart(2,'0');
