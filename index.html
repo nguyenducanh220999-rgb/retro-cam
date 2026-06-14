@@ -129,6 +129,7 @@
         .filter-strip {
             flex-shrink:0; display:flex; gap:6px;
             overflow-x:auto; padding:2px 0 4px; scrollbar-width:none;
+            min-height: 64px; /* Giữ khung luôn cố định diện tích */
         }
         .filter-strip::-webkit-scrollbar { display:none; }
         .filter-btn {
@@ -205,7 +206,6 @@
         .gallery-thumb { aspect-ratio:1; overflow:hidden; cursor:pointer; border-radius:3px; position:relative; background:#111; }
         .gallery-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
         .gallery-thumb .thumb-idx { position:absolute; bottom:3px; right:4px; font-size:8px; color:rgba(255,255,255,0.5); }
-        .gallery-thumb .burst-badge { position:absolute; top:3px; left:4px; background:rgba(255,170,0,0.85); color:#000; font-size:8px; font-weight:bold; padding:1px 4px; border-radius:3px; }
 
         /* ══ PHOTO VIEWER ══ */
         #photo-viewer { display:none; position:fixed; inset:0; background:#000; z-index:200; flex-direction:column; align-items:center; justify-content:center; }
@@ -437,7 +437,7 @@ async function initCamera(facing) {
         else { zoomTrack=null; zoomSlider.min=1; zoomSlider.max=5; zoomSlider.step=0.1; zoomSlider.value=1; currentZoom=1; }
         updateZoomUI(currentZoom); statusEl.textContent='READY TO SHOOT';
     } catch {
-        try { const s=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1920},height:{ideal:1080}},audio:false}); activeStream=s; video.srcObject=s; zoomTrack=null; statusEl.textContent='READY'; }
+        try { const s=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1920},height:{ideal:1080}},audio:false}); activeStream=s; video.srcObject=s; zoomTrack=null; statusEl.textContent='READY TO SHOOT'; }
         catch { statusEl.textContent='CAMERA ERROR'; alert('Vui lòng cấp quyền camera!'); }
     }
 }
@@ -458,16 +458,11 @@ zoomSlider.addEventListener('input',()=>setZoom(parseFloat(zoomSlider.value)));
 zoomIn.addEventListener('click',()=>setZoom(currentZoom+0.5));
 zoomOut.addEventListener('click',()=>setZoom(currentZoom-0.5));
 
-const vf=document.getElementById('viewfinder');
-let pd=0,pz=1;
-vf.addEventListener('touchstart',e=>{if(e.touches.length===2){pd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);pz=currentZoom;}},{passive:true});
-vf.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);setZoom(pz*(d/pd));}},{passive:true});
-
 gridBtn.addEventListener('click',()=>{
     showGrid=!showGrid;
     gridOverlay.classList.toggle('show',showGrid);
     gridBtn.classList.toggle('active',showGrid);
-    statusEl.textContent=showGrid?'GRID ON':'GRID OFF';
+    statusEl.textContent = showGrid ? 'GRID ON' : 'GRID OFF';
 });
 flipBtn.addEventListener('click',()=>{
     facingMode=facingMode==='environment'?'user':'environment';
@@ -485,70 +480,83 @@ document.querySelectorAll('.mode-btn').forEach(btn=>{
     });
 });
 
-// ── RENDER DYNAMIC FILM CANISTERS ──
-FILMS.forEach((film, idx) => {
-    if(film.fuji && (idx === 0 || !FILMS[idx-1].fuji)){
-        const d = document.createElement('div');
-        d.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 2px;';
-        d.innerHTML = '<span style="font-size:9px;color:#4a9eff;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);font-weight:bold;">FUJI</span>';
-        filterStrip.appendChild(d);
-    }
-    
-    const btn = document.createElement('div'); 
-    btn.className = 'filter-btn' + (idx === 0 ? ' active' : '');
-    
-    const th = document.createElement('div'); 
-    th.className = 'filter-thumb';
-    th.style.position = 'relative';
-    
-    const tc = document.createElement('canvas'); 
-    tc.width = 44; tc.height = 44;
-    drawSample(tc); 
-    tc.style.filter = film.liveFilter; 
-    tc.style.position = 'absolute';
-    tc.style.inset = '0';
-    tc.style.zIndex = '1';
-    th.appendChild(tc);
-    
-    const svgCanister = `
-        <svg viewBox="0 0 40 50" style="width:24px; height:32px; z-index:3; position:relative;">
-            <path d="M12 2h16v2H12z" fill="#555"/>
-            <path d="M15 0h10v2H15z" fill="#222"/>
-            <rect x="8" y="4" width="24" height="42" rx="3" fill="${film.rollColor}"/>
-            <rect x="6" y="8" width="2" height="34" fill="#111" opacity="0.35"/>
-            <rect x="12" y="10" width="16" height="30" rx="1" fill="${film.labelColor}"/>
-            <text x="20" y="26" fill="#ffffff" font-family="monospace" font-size="6" font-weight="bold" text-anchor="middle" transform="rotate(-90 20 26)" letter-spacing="0.5">${film.labelText}</text>
-            <path d="M12 46h16v2H12z" fill="#555"/>
-            <path d="M17 48h6v2H17z" fill="#222"/>
-        </svg>
-    `;
-    
-    const rollContainer = document.createElement('div');
-    rollContainer.style.cssText = 'position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center; background:transparent; pointer-events:none;';
-    rollContainer.innerHTML = svgCanister;
-    th.appendChild(rollContainer);
+function drawSample(c) {
+    const cx=c.getContext('2d'),w=c.width,h=c.height;
+    const g=cx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0,'#c87941');g.addColorStop(0.3,'#8db36a');g.addColorStop(0.6,'#4a7ba8');g.addColorStop(1,'#2a3a5a');
+    cx.fillStyle=g;cx.fillRect(0,0,w,h);
+    cx.fillStyle='rgba(255,220,160,0.6)';cx.beginPath();cx.ellipse(w*.55,h*.45,w*.18,h*.25,0,0,Math.PI*2);cx.fill();
+}
 
-    const lb = document.createElement('div'); 
-    lb.className = 'filter-label';
-    lb.innerHTML = film.fuji ? `<span style="color:#4a9eff">${film.short}</span>` : film.short;
-    
-    btn.appendChild(th); 
-    btn.appendChild(lb); 
-    filterStrip.appendChild(btn);
-    
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active'); 
-        currentFilm = FILMS[idx];
-        filmNameEl.textContent = film.fuji ? `📷 ${film.name}` : film.name;
-        video.style.filter = film.liveFilter;
-        statusEl.textContent = film.name.toUpperCase();
+// ── SAFE RENDER DYNAMIC FILM CANISTERS ──
+try {
+    FILMS.forEach((film, idx) => {
+        if(film.fuji && (idx > 0 && !FILMS[idx-1].fuji)){
+            const d = document.createElement('div');
+            d.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 2px;';
+            d.innerHTML = '<span style="font-size:9px;color:#4a9eff;letter-spacing:1px;writing-mode:vertical-rl;transform:rotate(180deg);font-weight:bold;">FUJI</span>';
+            filterStrip.appendChild(d);
+        }
+        
+        const btn = document.createElement('div'); 
+        btn.className = 'filter-btn' + (idx === 0 ? ' active' : '');
+        
+        const th = document.createElement('div'); 
+        th.className = 'filter-thumb';
+        th.style.position = 'relative';
+        
+        const tc = document.createElement('canvas'); 
+        tc.width = 44; tc.height = 44;
+        drawSample(tc); 
+        tc.style.filter = film.liveFilter; 
+        tc.style.position = 'absolute';
+        tc.style.inset = '0';
+        tc.style.zIndex = '1';
+        th.appendChild(tc);
+        
+        const svgCanister = `
+            <svg viewBox="0 0 40 50" style="width:24px; height:32px; z-index:3; position:relative;">
+                <path d="M12 2h16v2H12z" fill="#555"/>
+                <path d="M15 0h10v2H15z" fill="#222"/>
+                <rect x="8" y="4" width="24" height="42" rx="3" fill="${film.rollColor}"/>
+                <rect x="6" y="8" width="2" height="34" fill="#111" opacity="0.35"/>
+                <rect x="12" y="10" width="16" height="30" rx="1" fill="${film.labelColor}"/>
+                <text x="20" y="26" fill="#ffffff" font-family="monospace" font-size="6" font-weight="bold" text-anchor="middle" transform="rotate(-90 20 26)" letter-spacing="0.5">${film.labelText}</text>
+                <path d="M12 46h16v2H12z" fill="#555"/>
+                <path d="M17 48h6v2H17z" fill="#222"/>
+            </svg>
+        `;
+        
+        const rollContainer = document.createElement('div');
+        rollContainer.style.cssText = 'position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center; background:transparent; pointer-events:none;';
+        rollContainer.innerHTML = svgCanister;
+        th.appendChild(rollContainer);
+
+        const lb = document.createElement('div'); 
+        lb.className = 'filter-label';
+        lb.innerHTML = film.fuji ? `<span style="color:#4a9eff">${film.short}</span>` : film.short;
+        
+        btn.appendChild(th); 
+        btn.appendChild(lb); 
+        filterStrip.appendChild(btn);
+        
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active'); 
+            currentFilm = FILMS[idx];
+            filmNameEl.textContent = film.fuji ? `📷 ${film.name}` : film.name;
+            video.style.filter = film.liveFilter;
+            statusEl.textContent = film.name.toUpperCase();
+        });
     });
-});
+} catch(e) {
+    console.error("Error drawing film strip layout:", e);
+}
 video.style.filter=FILMS[0].liveFilter;
 
 // ── PROCESSING PIPELINE ──
 function applyGrade(data,film){
+    if(!film.grade) return;
     const{rMul,gMul,bMul,rLift,gLift,bLift}=film.grade;
     const cc=film.colorCast??null,ccR=cc?.r??0,ccG=cc?.g??0,ccB=cc?.b??0;
     for(let i=0;i<data.length;i+=4){
@@ -597,7 +605,8 @@ function captureFrame(film){
         else ctx.drawImage(video,0,0,canvas.width,canvas.height);
         const id=ctx.getImageData(0,0,canvas.width,canvas.height),d=id.data;
         if(film.id==='ilford') applyBW(d); else applyGrade(d,film);
-        applyCurve(d,LUTS[film.curve]); applyGrain(d,film.grain);
+        if(LUTS[film.curve]) applyCurve(d,LUTS[film.curve]); 
+        applyGrain(d,film.grain);
         ctx.putImageData(id,0,0);
         applyHalation(canvas.width,canvas.height,film.halation);
         applyVignette(canvas.width,canvas.height,film);
@@ -623,7 +632,7 @@ async function savePhoto(blob,filename){
     setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-function addToGallery(url,blob,filename,filmName,burstLabel){
+function addToGallery(url,blob,filename,filmName){
     photoRoll.push({url,blob,filename,filmName});
     const n=photoRoll.length;
     galleryBadge.textContent=n;galleryBadge.style.display='flex';
@@ -631,7 +640,6 @@ function addToGallery(url,blob,filename,filmName,burstLabel){
     const img=document.createElement('img');img.src=url;img.loading='lazy';
     const il=document.createElement('span');il.className='thumb-idx';il.textContent=n;
     th.appendChild(img);th.appendChild(il);
-    if(burstLabel){const bl=document.createElement('span');bl.className='burst-badge';bl.textContent=burstLabel;th.appendChild(bl);}
     th.addEventListener('click',()=>openViewer(parseInt(th.dataset.idx)));
     galleryGrid.insertBefore(th,galleryGrid.firstChild);
     galleryCount.textContent=n+' SHOTS';
@@ -669,7 +677,8 @@ captureBtn.addEventListener('click',async function(){
     if(isReviewing){
         preview.style.display='none';isReviewing=false;
         statusEl.textContent='READY TO SHOOT';
-        shutterDot.style.background = (shootMode && shootMode.startsWith('timer')) ? 'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)' : 'radial-gradient(circle at 38% 35%,#ff6655,#cc1100)';
+        const freshDot = document.getElementById('shutter-dot');
+        if(freshDot) freshDot.style.background = (shootMode && shootMode.startsWith('timer')) ? 'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)' : 'radial-gradient(circle at 38% 35%,#ff6655,#cc1100)';
         return;
     }
     if(isShooting)return;
@@ -683,20 +692,19 @@ captureBtn.addEventListener('click',async function(){
         const{blob,url}=await captureFrame(film);const filename=`${film.short}_${Date.now()}.jpg`;
         preview.src=url;preview.style.display='block';isReviewing=true;
         photoCount++;counterEl.textContent=String(photoCount).padStart(2,'0');
-        addToGallery(url,blob,filename,film.name,'');
+        addToGallery(url,blob,filename,film.name);
         statusEl.textContent='✓ SAVED';captureBtn.textContent='';
         captureBtn.innerHTML='<div class="shutter-dot" id="shutter-dot" style="background:radial-gradient(circle at 38% 35%,#44aaff,#0066cc)"></div>';
         captureBtn.disabled=false;isShooting=false;
         await savePhoto(blob,filename);return;
     }
 
-    // CHẾ ĐỘ CHỤP ĐƠN (SINGLE MODE)
     statusEl.textContent='DEVELOPING...';triggerFlash();
     await new Promise(r=>setTimeout(r,60));
     const{blob,url}=await captureFrame(film);const filename=`${film.short}_${Date.now()}.jpg`;
     preview.src=url;preview.style.display='block';isReviewing=true;
     photoCount++;counterEl.textContent=String(photoCount).padStart(2,'0');
-    addToGallery(url,blob,filename,film.name,'');
+    addToGallery(url,blob,filename,film.name);
     statusEl.textContent='✓ TAP TO CONTINUE';
     captureBtn.disabled=false;isShooting=false;
     await savePhoto(blob,filename);
