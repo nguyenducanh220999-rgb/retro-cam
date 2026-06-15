@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Retro Camera Premium v2.1.4</title>
+    <title>Retro Camera Premium v2.2.0</title>
     <style>
         /* ── CSS RESET & HYBRID WEBVIEW OPTIMIZATIONS ── */
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -33,12 +33,12 @@
         #cancel-import-btn:active { background: #aa0000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); transform: translateY(1px); }
 
         /* ── Mode bar ── */
-        .mode-bar { display:flex; gap:8px; justify-content:center; align-items:center; flex-shrink:0; }
-        .mode-btn { font-size:10px; padding:6px 14px; border-radius:20px; cursor:pointer; border:1.5px solid #2a2a2a; background: linear-gradient(to bottom, #1e1e1e, #111); color:#777; letter-spacing:0.5px; transition:all 0.15s; display:flex; align-items:center; gap:6px; min-height: 38px; flex-shrink: 0; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        .mode-btn.icon-only { padding: 6px 12px; }
+        .mode-bar { display:flex; gap:6px; justify-content:center; align-items:center; flex-shrink:0; }
+        .mode-btn { font-size:9px; padding:5px 10px; border-radius:18px; cursor:pointer; border:1.5px solid #2a2a2a; background: linear-gradient(to bottom, #1e1e1e, #111); color:#777; letter-spacing:0.5px; transition:all 0.15s; display:flex; align-items:center; gap:4px; min-height: 36px; flex-shrink: 0; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .mode-btn.icon-only { padding: 5px 10px; }
         .mode-btn.active { border-color:#ff9900; color:#ff9900; background: linear-gradient(to bottom, #2a2000, #140f00); box-shadow: 0 2px 6px rgba(255,153,0,0.15), inset 0 1px 1px rgba(255,255,255,0.05); }
-        .mode-btn svg { width:15px; height:15px; display: block; }
-        .mode-divider { width: 2px; height: 20px; background: #222; border-right: 1px solid #333; border-radius: 1px; margin: 0 4px; }
+        .mode-btn svg { width:14px; height:14px; display: block; }
+        .mode-divider { width: 2px; height: 18px; background: #222; border-right: 1px solid #333; border-radius: 1px; margin: 0 2px; }
 
         /* ── Viewfinder ── */
         .viewfinder { flex:1; border:2px solid #000; background:#050505; position:relative; overflow:hidden; border-radius:10px; min-height:0; touch-action:none; box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 1px 1px rgba(255,255,255,0.1); }
@@ -209,6 +209,16 @@
         <button class="mode-btn icon-only" id="flash-btn" title="Flash">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </button>
+        
+        <button class="mode-btn active" id="date-btn" title="Date Stamp Mode">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="date-val">'26</span>
+        </button>
+
+        <button class="mode-btn icon-only" id="leak-btn" title="Light Leaks & Dust">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </button>
+
         <button class="mode-btn" id="timer-btn" data-mode="timer" title="Timer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span id="timer-val">OFF</span>
@@ -216,7 +226,6 @@
         <div class="mode-divider"></div>
         <button class="mode-btn active" data-mode="single">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            PHOTO
         </button>
     </div>
 
@@ -293,7 +302,7 @@
 
 <div id="info-overlay">
     <div class="info-box">
-        <h3>RETRO CAMERA</h3><p class="version">Version 2.1.4 Premium</p><hr>
+        <h3>RETRO CAMERA</h3><p class="version">Version 2.2.0 Super Analog</p><hr>
         <p class="copyright">© 2026 GamHub.Store.<br>All rights reserved.</p>
         <button id="info-close">CLOSE</button>
     </div>
@@ -338,7 +347,27 @@ infoBtn.addEventListener('click', () => infoOverlay.classList.add('open')); info
 let photoCount=0, isReviewing=false, activeStream=null, facingMode='environment', currentZoom=1, zoomTrack=null, photoRoll=[], viewerIdx=0, currentFilm=FILMS[0], shootMode='single', isShooting=false, showGrid=false, flashOn=false, currentImportedImageSource=null;
 let timerValue = 0, originalImportedImage = null, previewImportedImage = null, userContrast = 1.0;
 
+// ── BIẾN TRẠNG THÁI CHO TÍNH NĂNG MỚI (DATE STAMP & LIGHT LEAKS) ──
+let dateMode = 'current'; // 'current' = 2026, '98' = 1998, 'off' = Tắt
+let isLeakOn = false; // Mặc định tắt cho ảnh sạch
+
 const timerBtn = document.getElementById('timer-btn'), timerVal = document.getElementById('timer-val');
+const dateBtn = document.getElementById('date-btn'), dateVal = document.getElementById('date-val');
+const leakBtn = document.getElementById('leak-btn');
+
+// Nút Hack Thời Gian
+dateBtn.addEventListener('click', () => {
+    if(dateMode === 'current') { dateMode = '98'; dateVal.textContent = "'98"; dateBtn.classList.add('active'); statusEl.textContent = 'TIME TRAVEL: 1998'; }
+    else if(dateMode === '98') { dateMode = 'off'; dateVal.textContent = "OFF"; dateBtn.classList.remove('active'); statusEl.textContent = 'DATE STAMP OFF'; }
+    else { dateMode = 'current'; dateVal.textContent = "'26"; dateBtn.classList.add('active'); statusEl.textContent = 'DATE: CURRENT'; }
+});
+
+// Nút Bật/Tắt Hạt bụi và Vệt Sáng
+leakBtn.addEventListener('click', () => {
+    isLeakOn = !isLeakOn;
+    leakBtn.classList.toggle('active', isLeakOn);
+    statusEl.textContent = isLeakOn ? 'FILM LEAKS & DUST: ON' : 'FILM LEAKS & DUST: OFF';
+});
 
 document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(btn=>{
     btn.addEventListener('click',()=>{
@@ -349,6 +378,7 @@ document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(btn=>{
         } else {
             timerValue = 0; timerVal.textContent = 'OFF'; timerBtn.classList.remove('active'); shootMode = btn.dataset.mode;
         }
+        // Chỉ reset trạng thái active của các nút hẹn giờ và chụp đơn (không đụng tới Leak và Date)
         document.querySelectorAll('.mode-bar .mode-btn[data-mode]').forEach(b => b.classList.remove('active'));
         if (timerValue > 0) timerBtn.classList.add('active'); else btn.classList.add('active');
         shutterDot.style.background = (shootMode.startsWith('timer') ? 'radial-gradient(circle at 38% 35%,#44aaff,#0066cc)' : 'radial-gradient(circle at 38% 35%,#ff7766,#cc0000)');
@@ -449,9 +479,14 @@ function applyHalation(w,h,hal){ if(!hal)return; const hx=ctx.createRadialGradie
 function applyVignette(w,h,film){ const vg=ctx.createRadialGradient(w/2,h/2,w*film.vignetteInner,w/2,h/2,w*film.vignetteOuter); vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,`rgba(0,0,0,${film.vignetteAlpha})`); ctx.fillStyle=vg;ctx.fillRect(0,0,w,h); }
 function applyPolaroidBorder(w,h){ const t=Math.floor(w*.05),bot=Math.floor(w*.18); ctx.fillStyle='#f5f0e8'; ctx.fillRect(0,0,w,t);ctx.fillRect(0,0,t,h);ctx.fillRect(w-t,0,t,h);ctx.fillRect(0,h-bot,w,bot); }
 
+// ── CẬP NHẬT TÍNH NĂNG 1: HACK NGÀY THÁNG ──
 function drawDateStamp(w,h,film){
+    if (dateMode === 'off') return; // Nếu chọn tắt thì không in ngày
     const now=new Date();
-    const s=`'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
+    // Thay đổi số đuôi của năm tùy theo nút bật chế độ
+    let yearText = dateMode === '98' ? '98' : String(now.getFullYear()).slice(-2);
+    const s=`'${yearText} ${String(now.getMonth()+1).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}`;
+    
     const fs = Math.floor(w * 0.028); 
     ctx.font = `bold ${fs}px "Courier New", Courier, "Lucida Console", monospace`; 
     const tw = ctx.measureText(s).width; 
@@ -464,13 +499,51 @@ function drawDateStamp(w,h,film){
 
 function drawWatermark(w,h) { const txt = "SHOT ON RETRO CAM"; const fs = Math.floor(w * 0.022); ctx.font = `bold ${fs}px "Courier New", Courier, monospace`; ctx.fillStyle = "rgba(255, 255, 255, 0.45)"; ctx.shadowBlur = 0; ctx.fillText(txt, w * 0.04, h - h * 0.04); }
 
-// ── BƯỚC FIX LỖI ĐEN MÀN HÌNH (SAFE MODE) CHO iOS/SAFARI ──
+// ── CẬP NHẬT TÍNH NĂNG 2: BỤI & VỆT SÁNG NGẪU NHIÊN ──
+function applyRandomLeaksAndDust(w, h) {
+    if (!isLeakOn) return; // Nếu đang tắt thì không ốp màng filter này vào
+    ctx.globalCompositeOperation = 'screen';
+    
+    // 1. Gieo xí ngầu để tạo Vệt sáng (Light Leaks) - Tỷ lệ 80% có vệt sáng
+    if(Math.random() > 0.2) { 
+        const x = Math.random() > 0.5 ? 0 : w; // Cháy sáng mép trái hoặc phải
+        const y = Math.random() * h;
+        const r = w * (0.3 + Math.random() * 0.5); // Độ loang bự ngẫu nhiên
+        const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+        
+        // Random màu vệt sáng: Cam, Đỏ dâu, hoặc Vàng nhẹ
+        const hueType = Math.random();
+        if(hueType > 0.6) {
+            grad.addColorStop(0, `rgba(255, 80, 0, ${0.3 + Math.random()*0.3})`); // Cam cháy
+        } else if (hueType > 0.3) {
+            grad.addColorStop(0, `rgba(255, 30, 30, ${0.3 + Math.random()*0.3})`); // Đỏ dâu
+        } else {
+            grad.addColorStop(0, `rgba(255, 150, 0, ${0.2 + Math.random()*0.2})`); // Vàng chanh
+        }
+        grad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0,0,w,h);
+    }
+    
+    // 2. Gieo xí ngầu tạo Vết xước và Bụi (Dust & Scratches)
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)'; // Bụi trắng đục mờ
+    const numScratches = Math.floor(Math.random() * 8 + 3); // Random 3 đến 10 đường xước
+    for(let i=0; i<numScratches; i++) {
+        ctx.beginPath();
+        ctx.lineWidth = Math.random() * 0.8 + 0.2;
+        let sx = Math.random()*w, sy = Math.random()*h;
+        ctx.moveTo(sx, sy);
+        // Tạo đường kẻ mảnh mờ đứt đoạn
+        ctx.lineTo(sx + (Math.random()-0.5)*w*0.1, sy + (Math.random()-0.5)*h*0.1);
+        ctx.stroke();
+    }
+}
+
 function captureFrame(film, sourceImg = null, isPreviewMode = false){
     return new Promise(async (resolve, reject) => {
         try {
             let cw = 1280, ch = 720; let hardwareBitmap = null;
-            
-            // Chỉ chạy ImageCapture nếu không phải là iOS (Safari crash memory luồng này)
             if (!isIOS && !sourceImg && zoomTrack && typeof ImageCapture !== 'undefined') {
                 try { const capturer = new ImageCapture(zoomTrack); hardwareBitmap = await capturer.grabFrame(); cw = hardwareBitmap.width; ch = hardwareBitmap.height; } catch(e) { hardwareBitmap = null; } 
             }
@@ -478,7 +551,6 @@ function captureFrame(film, sourceImg = null, isPreviewMode = false){
             if (sourceImg) { cw = sourceImg.width || sourceImg.naturalWidth; ch = sourceImg.height || sourceImg.naturalHeight; } 
             else if (!hardwareBitmap && video.videoWidth) { cw = video.videoWidth; ch = video.videoHeight; }
 
-            // Giới hạn an toàn Canvas: Safari sẽ chết nếu quá 3840px, nên hạ xuống 1920px cho iOS.
             let MAX_DIM = isPreviewMode ? 800 : (isIOS ? 1920 : 3840); 
             if (cw > MAX_DIM || ch > MAX_DIM) { const ratio = Math.min(MAX_DIM / cw, MAX_DIM / ch); cw = Math.round(cw * ratio); ch = Math.round(ch * ratio); }
 
@@ -500,6 +572,8 @@ function captureFrame(film, sourceImg = null, isPreviewMode = false){
             if(LUTS[film.curve]) applyCurve(d,LUTS[film.curve]); applyGrain(d,film.grain); ctx.putImageData(id,0,0);
             applyHalation(cw,ch,film.halation); applyVignette(cw,ch,film); if(film.border) applyPolaroidBorder(cw,ch);
             
+            applyRandomLeaksAndDust(cw, ch); // Chèn hạt bụi và vệt sáng vào trước khi in ngày tháng
+            
             drawDateStamp(cw,ch,film); drawWatermark(cw,ch);
             canvas.toBlob(blob => { if(!blob) return reject("Blob error"); resolve({blob, url:URL.createObjectURL(blob)}); }, 'image/jpeg', isPreviewMode ? 0.7 : 0.95);
         } catch(e) { reject(e); }
@@ -508,22 +582,10 @@ function captureFrame(film, sourceImg = null, isPreviewMode = false){
 
 function triggerFlash(){ flashOverlay.style.transition='opacity 0.04s ease-in';flashOverlay.style.opacity='.9'; setTimeout(()=>{flashOverlay.style.transition='opacity 0.4s ease-out';flashOverlay.style.opacity='0';},70); }
 
-// ── BƯỚC FIX LƯU ẢNH TRÊN BẤT KỲ NỀN TẢNG NÀO ──
 async function savePhoto(blob,filename){
     const file=new File([blob],filename,{type:'image/jpeg'});
+    if(isIOS && navigator.share && navigator.canShare?.({files:[file]})){ try{ await navigator.share({files:[file]}); return; } catch(e) { return; } }
     
-    // Nếu là iPhone (Safari/iOS), sử dụng Share Sheet để người dùng có thể "Lưu Hình Ảnh" (Save Image) vào thẳng ứng dụng Ảnh gốc.
-    if(isIOS && navigator.share && navigator.canShare?.({files:[file]})){ 
-        try{ 
-            await navigator.share({files:[file]}); 
-            return; 
-        } catch(e) { 
-            /* Bỏ qua nếu người dùng bấm Hủy Share */
-            return; 
-        } 
-    }
-    
-    // Còn lại (Android WebView/APK/PC), tiến hành tải ngầm êm ái
     const url = URL.createObjectURL(blob); 
     const a = document.createElement('a'); 
     a.href = url; 
@@ -607,7 +669,6 @@ captureBtn.addEventListener('click', async function(){
             setTimeout(() => { 
                 if (!originalImportedImage) { 
                     preview.style.display='none'; isReviewing=false; statusEl.textContent='READY TO SHOOT'; 
-                    // Chống đen màn hình video (kích lại luồng nếu lỡ bị kẹt trên iOS)
                     if (video.paused) video.play(); 
                 } 
             }, 1200);
@@ -623,7 +684,6 @@ captureBtn.addEventListener('click', async function(){
             setTimeout(() => { 
                 if (!originalImportedImage) { 
                     preview.style.display='none'; isReviewing=false; statusEl.textContent='READY TO SHOOT'; 
-                    // Chống đen màn hình video (kích lại luồng nếu lỡ bị kẹt trên iOS)
                     if (video.paused) video.play();
                 } 
             }, 1200);
